@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mesh Texture Comparison Study</title>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background: #1a1a1a; color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px; line-height: 1.5;
+}
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+.header {
+  padding: 12px 24px; background: #222; border-bottom: 1px solid #333;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+#progress { font-size: 13px; color: #aaa; }
+.screen {
+  flex: 1 1 auto; padding: 24px; max-width: 880px; width: 100%;
+  margin: 0 auto;
+}
+.viewer-wrap { flex: 1 1 auto; position: relative; min-height: 480px; }
+iframe {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  border: 0;
+}
+.choices {
+  display: flex; gap: 16px; justify-content: center;
+  padding: 16px 24px; background: #222; border-top: 1px solid #333;
+}
+.btn {
+  padding: 10px 28px; font-size: 15px; cursor: pointer;
+  background: #2a64d6; color: white; border: 0; border-radius: 6px;
+  font-weight: 600; min-width: 140px;
+}
+.btn:hover:not(:disabled) { background: #3a78ea; }
+.btn.secondary { background: #444; }
+.btn.secondary:hover:not(:disabled) { background: #555; }
+.btn:disabled { background: #333; color: #888; cursor: not-allowed; }
+h2 { margin: 0 0 12px; font-size: 22px; }
+h3 { margin: 16px 0 8px; font-size: 16px; }
+p { margin: 0 0 12px; }
+.consent {
+  background: #2a2a2a; padding: 16px; border-radius: 6px; margin: 16px 0;
+  max-height: 320px; overflow-y: auto;
+}
+ul { margin: 8px 0 12px 24px; }
+li { margin: 4px 0; }
+.checkbox-row { margin: 16px 0; display: flex; align-items: center; gap: 8px; }
+.error { color: #ff6b6b; padding: 16px; background: #2a1a1a; border-radius: 6px; }
+.muted { color: #888; font-size: 13px; }
+.notice {
+  background: #1f3a5f; padding: 12px; border-left: 4px solid #2a64d6;
+  margin: 12px 0; border-radius: 0 4px 4px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="header">
+    <h1>Mesh Texture Comparison Study</h1>
+    <div id="progress"></div>
+  </div>
+  <div class="screen" id="screen"><p>Loading…</p></div>
+</div>
+
+<form id="mturkForm" method="POST" style="display:none">
+  <input type="hidden" name="assignmentId" id="f_assignmentId">
+  <input type="hidden" name="hitId"        id="f_hitId">
+  <input type="hidden" name="workerId"     id="f_workerId">
+</form>
+
+<!-- UniqueTurker (myleott.com) shut down in 2022. We replace the remote
+     repeat-participation gate with a best-effort client-side localStorage
+     check (mark on submit, refuse on repeat load). This is bypassable by
+     clearing cache / different browser / different device. The README's
+     "Limitations" section documents the post-hoc workerId-cap filter that
+     scripts/reconcile.py applies for true enforcement. -->
+
+<script type="module">
+const UT_ID = 'spotex_texture_v1_20260509';
+
+// Best-effort: prevents the same browser+workerId from submitting more than
+// one HIT under this UT_ID. Cleared cache / different browser / different
+// device bypasses; we accept that and rely on reconcile.py for the real cap.
+function utStorageKey(uid, wid) { return `ut:${uid}:${wid || 'anon'}`; }
+function utWorkerHasSubmitted(uid, wid) {
+  try { return localStorage.getItem(utStorageKey(uid, wid)) === '1'; }
+  catch (e) { return false; }
+}
+function utMarkWorkerSubmitted(uid, wid) {
+  try { localStorage.setItem(utStorageKey(uid, wid), '1'); }
+  catch (e) { /* localStorage disabled; best-effort skip */ }
+}
+
+const url = new URL(location.href);
+const hitId        = url.searchParams.get('hitId');
+const assignmentId = url.searchParams.get('assignmentId');
+const workerId     = url.searchParams.get('workerId') || '';
+const turkSubmitTo = url.searchParams.get('turkSubmitTo')
+  || 'https://www.mturk.com';
+
+const screenEl   = document.getElementById('screen');
+const progressEl = document.getElementById('progress');
+
+function fail(msg) {
+  screenEl.innerHTML = `<div class="error">${msg}</div>`;
+  progressEl.textContent = '';
+}
+
+function isPreview() {
+  return !assignmentId || assignmentId === 'ASSIGNMENT_ID_NOT_AVAILABLE';
+}
+
+if (!hitId) {
+  fail('Missing hitId. Please return this HIT and accept it from MTurk.');
+  throw new Error('no hitId');
+}
+
+if (!isPreview() && utWorkerHasSubmitted(UT_ID, workerId)) {
+  fail('You have already participated in this study. Please return this HIT.');
+  throw new Error('UT limit');
+}
+
+const trialMap = await fetch('trialMap.json').then(r => {
+  if (!r.ok) throw new Error('trialMap fetch failed: ' + r.status);
+  return r.json();
+});
+
+const myTrials = trialMap[hitId];
+if (!Array.isArray(myTrials) || myTrials.length !== 25) {
+  fail('Invalid HIT ID. Please return this HIT and accept it from MTurk again.');
+  throw new Error('bad hitId or trial count');
+}
+
+const tutorialEntries = trialMap['H_TUTORIAL'];
+if (!Array.isArray(tutorialEntries) || tutorialEntries.length < 1) {
+  fail('Tutorial entry missing. Please contact the requester.');
+  throw new Error('no tutorial');
+}
+const tut = tutorialEntries[0];
+
+const selections = new Array(25).fill(null);
+
+const renderConsent = () => {
+  screenEl.innerHTML = `
+    <h2>Consent &amp; Instructions</h2>
+
+    <p>You will compare pairs of 3D textured meshes and pick the one that
+    looks better. The study takes about <b>10 minutes</b> and pays
+    <b>$2.00</b>.</p>
+
+    <h3>What you will do</h3>
+    <ul>
+      <li>1 short tutorial trial (does not count toward your reward).</li>
+      <li>25 trials, each showing two textured 3D meshes side by side
+      labeled "Method A" and "Method B".</li>
+      <li>You can rotate / zoom each mesh; the two views stay synchronized.</li>
+      <li>Pick whichever mesh has the better-looking texture.</li>
+    </ul>
+
+    <h3>Quality checks</h3>
+    <p>Some trials are attention checks with an obvious correct answer.
+    Workers who fail the attention checks will be rejected.</p>
+
+    <div class="consent">
+      <p><b>Eligibility.</b> You must be 18 or older.</p>
+      <p><b>Risks.</b> None beyond ordinary screen use.</p>
+      <p><b>Privacy.</b> We record only your MTurk worker ID, your 25
+      selections, and your timing. No personal data is collected.</p>
+      <p><b>Voluntary.</b> You may stop at any time by closing the browser
+      tab; in that case the HIT will not submit and you will not be paid.</p>
+      <p><b>Contact.</b> Questions: <a href="mailto:kkh23834022@gmail.com"
+      style="color:#9ac0ff">kkh23834022@gmail.com</a>.</p>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="consent_box">
+      <label for="consent_box">I am 18+ and I consent to participate.</label>
+    </div>
+
+    ${isPreview() ? `
+      <div class="notice">
+        Preview mode: accept the HIT in MTurk to start.
+      </div>
+      <button class="btn" disabled>Start (preview)</button>
+    ` : `
+      <button class="btn" id="start_btn" disabled>Start tutorial</button>
+    `}
+  `;
+
+  if (!isPreview()) {
+    const cb  = screenEl.querySelector('#consent_box');
+    const btn = screenEl.querySelector('#start_btn');
+    cb.addEventListener('change', () => { btn.disabled = !cb.checked; });
+    btn.addEventListener('click', renderTutorial);
+  }
+};
+
+function buildViewerUrl(hid, trial) {
+  const u = new URL('viewer-pair.html', location.href);
+  u.searchParams.set('hitId', hid);
+  u.searchParams.set('dirL',  trial.dirL);
+  u.searchParams.set('dirR',  trial.dirR);
+  if (trial.vig === 'L' || trial.vig === 'R') {
+    u.searchParams.set('vig', trial.vig);
+  }
+  return u.toString();
+}
+
+const renderTutorial = () => {
+  progressEl.textContent = 'Tutorial';
+  const tutUrl = buildViewerUrl('H_TUTORIAL', tut);
+
+  screenEl.innerHTML = `
+    <h2>Tutorial</h2>
+    <p>This is one practice trial. It does not count toward your reward.</p>
+    <p>Rotate either mesh; both views stay in sync. Click <b>Choose A</b>
+    or <b>Choose B</b> to continue.</p>
+    <div class="viewer-wrap"><iframe id="vf" src="${tutUrl}"></iframe></div>
+    <div class="choices">
+      <button class="btn" id="tut_a" disabled>Choose A</button>
+      <button class="btn" id="tut_b" disabled>Choose B</button>
+    </div>
+  `;
+
+  const iframe = screenEl.querySelector('#vf');
+  const a = screenEl.querySelector('#tut_a');
+  const b = screenEl.querySelector('#tut_b');
+  iframe.addEventListener('load', () => { a.disabled = false; b.disabled = false; });
+  a.addEventListener('click', () => renderTrial(0));
+  b.addEventListener('click', () => renderTrial(0));
+};
+
+const renderTrial = (idx) => {
+  if (idx >= 25) { renderDone(); return; }
+  const trial = myTrials[idx];
+  const trialUrl = buildViewerUrl(hitId, trial);
+
+  progressEl.textContent = `Trial ${idx + 1} of 25`;
+  screenEl.innerHTML = `
+    <div class="viewer-wrap"><iframe id="vf" src="${trialUrl}"></iframe></div>
+    <div class="choices">
+      <button class="btn" id="ch_a" disabled>Choose A</button>
+      <button class="btn" id="ch_b" disabled>Choose B</button>
+    </div>
+  `;
+
+  const iframe = screenEl.querySelector('#vf');
+  const a = screenEl.querySelector('#ch_a');
+  const b = screenEl.querySelector('#ch_b');
+  let chosen = false;
+  iframe.addEventListener('load', () => { a.disabled = false; b.disabled = false; });
+  const pick = (val) => {
+    if (chosen) return;
+    chosen = true;
+    a.disabled = true; b.disabled = true;
+    selections[idx] = val;
+    renderTrial(idx + 1);
+  };
+  a.addEventListener('click', () => pick('a'));
+  b.addEventListener('click', () => pick('b'));
+};
+
+const renderDone = () => {
+  progressEl.textContent = 'All trials complete';
+  screenEl.innerHTML = `
+    <h2>All done — thank you!</h2>
+    <p>Click <b>Submit HIT</b> to send your selections to MTurk and finish.</p>
+    <p class="muted">After submission MTurk will display its standard
+    completion page. The requester will review and approve within 48 hours.</p>
+    <button class="btn" id="submit_btn">Submit HIT</button>
+    <button class="btn secondary" id="back_btn" style="margin-left:8px">
+      Review last trial
+    </button>
+  `;
+  screenEl.querySelector('#back_btn').addEventListener('click', () => {
+    renderTrial(24);
+  });
+  screenEl.querySelector('#submit_btn').addEventListener('click', submitHIT);
+};
+
+function submitHIT() {
+  if (selections.some(v => v !== 'a' && v !== 'b')) {
+    fail('Internal error: missing selections.');
+    return;
+  }
+
+  const form = document.getElementById('mturkForm');
+  form.action = `${turkSubmitTo}/mturk/externalSubmit`;
+  document.getElementById('f_assignmentId').value = assignmentId || '';
+  document.getElementById('f_hitId').value        = hitId;
+  document.getElementById('f_workerId').value     = workerId;
+
+  for (let i = 0; i < 25; i++) {
+    const inp = document.createElement('input');
+    inp.type = 'hidden';
+    inp.name = `selection${i + 1}`;
+    inp.value = selections[i];
+    form.appendChild(inp);
+  }
+  utMarkWorkerSubmitted(UT_ID, workerId);
+  form.submit();
+}
+
+renderConsent();
+</script>
+</body>
+</html>

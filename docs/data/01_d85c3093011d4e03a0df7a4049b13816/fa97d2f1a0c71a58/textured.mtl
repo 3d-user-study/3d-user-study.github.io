@@ -1,0 +1,5 @@
+newmtl material_0
+Ka 0.200 0.200 0.200
+Kd 0.800 0.800 0.800
+Ks 1.000 1.000 1.000
+map_Kd textured.png

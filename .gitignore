@@ -1,0 +1,55 @@
+# ============================================================
+# texture-study - GitHub Pages static-host architecture
+# ============================================================
+
+# ============================================================
+# CRITICAL: PRIVATE FILES — must NEVER reach GitHub.
+# Committing these would break Invariant #2 (method-name leak)
+# or expose worker PII.
+# ============================================================
+scripts/.dehydrate_salt
+scripts/method_hash_map.json
+scripts/aliasmap_full.json
+scripts/launch_log.csv
+
+# Analysis outputs may contain methodL/methodR and workerIds.
+analysis/
+
+# Original (un-anonymized) mesh tree.
+public/_internal/
+
+# ============================================================
+# Python
+# ============================================================
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+
+# ============================================================
+# Legacy Next.js / Node (defensive — scaffold has been stripped)
+# ============================================================
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+.pnp
+.pnp.*
+
+# ============================================================
+# OS / editor
+# ============================================================
+.DS_Store
+*.pem
+.env*
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+*.log
