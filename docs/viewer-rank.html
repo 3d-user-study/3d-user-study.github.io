@@ -634,7 +634,7 @@ function initPartMasterControls() {
 
   // Use the #grid element as the drag target — it covers only the mesh area,
   // so the prompt panel and instruction bar remain fully clickable.
-  partMasterDummy = gridEl;
+  const partMasterDummy = gridEl;
   // Show grab cursor on the grid when in Part mode (restored in applyMode)
   partMasterControls = new OrbitControls(partMasterCamera, partMasterDummy);
   partMasterControls.target.copy(center);
