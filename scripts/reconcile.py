@@ -1,31 +1,34 @@
 #!/usr/bin/env python3
 """Join MTurk results CSV with `scripts/aliasmap_full.json` and produce:
 
-  - judgments.csv   one row per accepted real-trial vote (sample, methodL,
-                    methodR, choice, workerId, hitId, assignmentId)
-  - approvals.csv   AssignmentIds to approve in MTurk (vigilance >= 1.0
-                    AND within --worker_cap)
-  - rejections.csv  AssignmentIds to reject (vigilance < 1.0 OR exceeded
-                    --worker_cap) plus rejection feedback string
+  - rankings.csv    one row per accepted main-trial ranking
+                    (sample, kind, m_rank1..m_rank6, workerId, hitId,
+                    assignmentId, trialIdx); m_rankK = method name placed
+                    at rank K by the worker (1 = best, 6 = worst).
+  - approvals.csv   AssignmentIds to approve (vigilance >= threshold AND
+                    within --worker_cap).
+  - rejections.csv  AssignmentIds to reject (vigilance < threshold OR
+                    exceeded --worker_cap) plus rejection feedback.
 
-CSV column expectations:
+CSV column expectations from MTurk batch results:
 
   - HITId, WorkerId, AssignmentId, AssignmentStatus
   - SubmitTime           used to determine "first submission" per worker
-                         when --worker_cap is enabled; if unparseable we
-                         fall back to AssignmentId as deterministic order
-  - Answer.selection1..Answer.selection25 (each "a" or "b")
-  - Answer.hitId         echoed by index.html submit form (== our H_0001..H_0240)
-  - RequesterAnnotation  set by scripts/launch_hits.py (== our H_0001..H_0240)
+                         when --worker_cap is enabled; ISO-8601 or the
+                         legacy "Tue Jan 03 12:34:56 PST 2023" form.
+  - Answer.rank1..Answer.rank25 (each a 6-char permutation of "ABCDEF")
+  - Answer.hitId         echoed by index.html submit form (== H_0001..)
+  - RequesterAnnotation  set by launch_hits.py (== H_0001..)
 
-Reconciliation rules (plan §1.2):
-  1. Vigilance threshold = 1.0 (worker must get ALL 5 vigilance correct).
-     Failures get the long REJECT_LINE matching APAP's wording.
-  2. (Optional, --worker_cap N >= 1) Per-worker cap: among the
+Reconciliation rules:
+  1. Vigilance threshold = 1.0 (all 5 vigilance trials must rank the
+     `_corrupt` slot at position 6 / last). Failures get the long
+     REJECT_LINE matching APAP's wording.
+  2. (Optional, --worker_cap N >= 1) Per-worker cap: among
      vigilance-passing submissions, keep only the first N per workerId
-     (sorted by SubmitTime, AssignmentId tiebreaker). The rest are demoted
-     to rejection with REJECT_LINE_WORKER_CAP feedback.
-     Default --worker_cap=0 disables this cap (preserves prior behavior).
+     (sorted by SubmitTime, AssignmentId tiebreaker). Excess submissions
+     are demoted to rejection with REJECT_LINE_WORKER_CAP feedback.
+     Default --worker_cap=0 disables the cap.
 """
 
 from __future__ import annotations
@@ -41,6 +44,8 @@ from pathlib import Path
 VIGILANCE_THRESHOLD = 1.0
 N_TRIALS = 25
 N_VIGILANCE = 5
+N_SLOTS = 6
+SLOT_LETTERS = ("A", "B", "C", "D", "E", "F")
 
 REJECT_LINE = (
     "We would like to extend our deepest gratitude for your time and efforts "
@@ -63,9 +68,9 @@ REJECT_LINE_WORKER_CAP = (
 def _resolve_hitid(row: dict[str, str]) -> str | None:
     """Pull our internal HitId out of the MTurk CSV row.
 
-    Prefer `RequesterAnnotation` (set by launch_hits.py) over `Answer.hitId`
-    (echoed via the form): the annotation is set server-side at HIT
-    creation and cannot be tampered with by a malicious client.
+    Prefer `RequesterAnnotation` (set by launch_hits.py at HIT creation,
+    server-side) over `Answer.hitId` (echoed via the form): the
+    annotation cannot be tampered with by a malicious client.
     """
     for key in ("RequesterAnnotation", "Answer.hitId"):
         v = row.get(key)
@@ -79,10 +84,6 @@ def _parse_submit_time(raw: str) -> float:
 
     Returns 0.0 if unparseable; AssignmentId is then used as the
     deterministic tiebreaker for "first submission" ordering.
-
-    MTurk batch results commonly use "Tue Jan 03 12:34:56 PST 2023" but
-    occasionally ISO-8601. We try ISO first, then the legacy format with
-    timezone stripped (Python's %Z is unreliable across PST/PDT/EST/EDT).
     """
     if not raw:
         return 0.0
@@ -93,13 +94,38 @@ def _parse_submit_time(raw: str) -> float:
         pass
     parts = s.split()
     if len(parts) >= 6:
-        # "Tue Jan 03 12:34:56 PST 2023" -> "Tue Jan 03 12:34:56 2023"
         no_tz = " ".join(parts[:4] + [parts[5]])
         try:
             return datetime.strptime(no_tz, "%a %b %d %H:%M:%S %Y").timestamp()
         except ValueError:
             pass
     return 0.0
+
+
+def _parse_rank_string(raw: str) -> list[str] | None:
+    """Validate the 6-char rank permutation submitted by the form.
+
+    Returns the per-position slot list (rank 1 = first char, rank 6 =
+    last char) or None if malformed.
+    """
+    if not raw:
+        return None
+    s = raw.strip().upper()
+    if len(s) != N_SLOTS:
+        return None
+    seen: set[str] = set()
+    for ch in s:
+        if ch not in SLOT_LETTERS or ch in seen:
+            return None
+        seen.add(ch)
+    return list(s)
+
+
+def _slot_to_method(trial: dict, slot_letter: str) -> str | None:
+    for s in trial["slots"]:
+        if s["slot"] == slot_letter:
+            return s["method"]
+    return None
 
 
 def main() -> None:
@@ -112,11 +138,11 @@ def main() -> None:
                         default=Path("texture-study/analysis"))
     parser.add_argument("--worker_cap",  type=int, default=0,
                         help="Per-workerId cap on accepted submissions. "
-                             "0 = disabled (default, matches sandbox-pilot "
-                             "behavior). >=1 enables hard guarantee for "
-                             "production: only the first N submissions per "
-                             "workerId are approved; rest are rejected with "
-                             "REJECT_LINE_WORKER_CAP. Recommended N=1.")
+                             "0 = disabled (default). >=1 enables hard "
+                             "guarantee for production: only the first N "
+                             "submissions per workerId are approved; rest "
+                             "are rejected with REJECT_LINE_WORKER_CAP. "
+                             "Recommended N=1.")
     args = parser.parse_args()
 
     if args.worker_cap < 0:
@@ -125,7 +151,7 @@ def main() -> None:
     full_map = json.loads(args.full_json.read_text())
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    judgments_path  = args.out_dir / "judgments.csv"
+    rankings_path   = args.out_dir / "rankings.csv"
     approvals_path  = args.out_dir / "approvals.csv"
     rejections_path = args.out_dir / "rejections.csv"
     summary_path    = args.out_dir / "reconcile_summary.txt"
@@ -137,8 +163,6 @@ def main() -> None:
     vig_score_dist: Counter[int] = Counter()
     reasons: Counter[str] = Counter()
 
-    # Pass 1: stream the CSV; write vigilance rejections immediately,
-    # buffer vigilance-passing rows for the cap pass.
     pending_pass: list[dict] = []
     rejections_buf: list[list[str]] = []
 
@@ -173,27 +197,26 @@ def main() -> None:
                 reasons["bad_trial_count"] += 1
                 continue
 
-            selections: list[str] = []
-            missing = False
+            parsed_ranks: list[list[str] | None] = []
             for t in trials:
-                col = f"Answer.selection{t['i'] + 1}"
-                v = (row.get(col) or "").strip().lower()
-                if v not in ("a", "b"):
-                    missing = True
-                    break
-                selections.append(v)
-            if missing:
+                col = f"Answer.rank{t['i'] + 1}"
+                parsed = _parse_rank_string(row.get(col, ""))
+                parsed_ranks.append(parsed)
+            if any(p is None for p in parsed_ranks):
                 n_skipped += 1
-                reasons["missing_selections"] += 1
+                reasons["missing_or_malformed_ranks"] += 1
                 continue
 
             correct = 0
             n_vig = 0
-            for t in trials:
+            for t, parsed in zip(trials, parsed_ranks):
                 if t["kind"] != "vigilance":
                     continue
                 n_vig += 1
-                if selections[t["i"]] == t["expected"]:
+                cs = t.get("corrupt_slot")
+                if cs is None or parsed is None:
+                    continue
+                if parsed[N_SLOTS - 1] == cs:
                     correct += 1
             if n_vig != N_VIGILANCE:
                 n_skipped += 1
@@ -216,18 +239,16 @@ def main() -> None:
                 "hit_id":        hit_id,
                 "submit_time":   _parse_submit_time(row.get("SubmitTime", "")),
                 "trials":        trials,
-                "selections":    selections,
+                "parsed_ranks":  parsed_ranks,
                 "score":         score,
             })
 
-    # Pass 2: apply per-worker cap among vigilance-passing rows.
     final_passes: list[dict] = []
     if args.worker_cap > 0:
         by_worker: dict[str, list[dict]] = defaultdict(list)
         for entry in pending_pass:
             by_worker[entry["worker_id"]].append(entry)
         for entries in by_worker.values():
-            # Deterministic order: SubmitTime ascending, AssignmentId tiebreaker.
             entries.sort(key=lambda e: (e["submit_time"], e["assignment_id"]))
             kept = entries[:args.worker_cap]
             excess = entries[args.worker_cap:]
@@ -241,27 +262,41 @@ def main() -> None:
     else:
         final_passes = pending_pass
 
-    n_passed    = len(final_passes)
-    n_judgments = 0
+    n_passed = len(final_passes)
+    n_main_rankings = 0
+    n_vig_rankings  = 0
 
-    with judgments_path.open("w", newline="") as f_jud:
-        jud_writer = csv.writer(f_jud)
-        jud_writer.writerow([
-            "sample", "methodL", "methodR", "choice",
+    with rankings_path.open("w", newline="") as f_rk:
+        rk_writer = csv.writer(f_rk)
+        rk_writer.writerow([
+            "sample", "kind",
+            "m_rank1", "m_rank2", "m_rank3", "m_rank4", "m_rank5", "m_rank6",
             "workerId", "hitId", "assignmentId", "trialIdx",
         ])
         for entry in final_passes:
-            for t in entry["trials"]:
-                if t["kind"] != "real":
+            for t, parsed in zip(entry["trials"], entry["parsed_ranks"]):
+                if parsed is None:
                     continue
-                sel = entry["selections"][t["i"]]
-                choice = "L" if sel == "a" else "R"
-                jud_writer.writerow([
-                    t["sample"], t["methodL"], t["methodR"], choice,
+                methods_in_rank: list[str] = []
+                bad = False
+                for slot_letter in parsed:
+                    m = _slot_to_method(t, slot_letter)
+                    if m is None:
+                        bad = True
+                        break
+                    methods_in_rank.append(m)
+                if bad or len(methods_in_rank) != N_SLOTS:
+                    continue
+                rk_writer.writerow([
+                    t["sample"], t["kind"],
+                    *methods_in_rank,
                     entry["worker_id"], entry["hit_id"],
                     entry["assignment_id"], t["i"],
                 ])
-                n_judgments += 1
+                if t["kind"] == "main":
+                    n_main_rankings += 1
+                else:
+                    n_vig_rankings += 1
 
     with approvals_path.open("w", newline="") as f_app:
         app_writer = csv.writer(f_app)
@@ -286,9 +321,10 @@ def main() -> None:
         f"  -> approved (final): {n_passed}",
         f"  -> rejected by cap : {n_rejected_cap}  (--worker_cap={args.worker_cap})",
         f"rejected (vig<1.0)   : {n_rejected_vig}",
-        f"real judgments emit  : {n_judgments}",
+        f"main rankings emit   : {n_main_rankings}",
+        f"vigilance rankings   : {n_vig_rankings}  (kind='vigilance', _corrupt included)",
         f"vigilance histogram  : {dict(sorted(vig_score_dist.items()))}",
-        f"-> judgments  -> {judgments_path}",
+        f"-> rankings   -> {rankings_path}",
         f"-> approvals  -> {approvals_path}",
         f"-> rejections -> {rejections_path}",
     ]

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Method Rank Viewer</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: #1a1a1a; color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+}
+#main-canvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+}
+#scroll-root {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  overflow-y: auto; z-index: 1;
+}
+
+#prompt-panel {
+  position: sticky; top: 0; z-index: 5;
+  background: rgba(20,20,20,0.96);
+  padding: 10px 18px; border-bottom: 1px solid #333;
+  pointer-events: auto;
+}
+#prompt-full {
+  font-size: 14px; font-weight: 600; color: #fff;
+  margin-bottom: 4px; line-height: 1.35;
+}
+#prompt-parts {
+  font-size: 12px; color: #bbb; line-height: 1.4;
+  margin: 2px 0 0 0;
+}
+#prompt-parts li { margin-left: 18px; }
+
+#instruction {
+  background: #1f3a5f; color: #cfe1ff; font-size: 12px;
+  padding: 6px 18px; border-bottom: 1px solid #333;
+  pointer-events: auto;
+}
+
+#rank-list {
+  margin: 0; padding: 0; list-style: none;
+  pointer-events: auto;
+}
+.rank-row {
+  display: flex; align-items: stretch;
+  height: 200px;
+  background: rgba(30,30,30,0.65);
+  border-bottom: 1px solid #333;
+}
+.row-handle {
+  flex: 0 0 40px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; color: #888;
+  font-size: 24px; user-select: none;
+  background: rgba(40,40,40,0.7);
+  border-right: 1px solid #333;
+}
+.row-handle:hover { color: #fff; background: rgba(60,60,60,0.8); }
+.row-handle:active { cursor: grabbing; }
+.row-rank {
+  flex: 0 0 50px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: #2a64d6;
+  background: rgba(40,40,40,0.5);
+  border-right: 1px solid #333;
+  user-select: none;
+}
+.row-canvas-target {
+  flex: 1 1 auto; position: relative; min-width: 0;
+}
+.row-cell-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: auto;
+}
+.row-label {
+  flex: 0 0 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #aaa;
+  background: rgba(40,40,40,0.5);
+  border-left: 1px solid #333;
+  user-select: none;
+}
+
+.rank-row-ghost {
+  opacity: 0.4;
+}
+.rank-row-chosen {
+  background: rgba(42,100,214,0.25);
+}
+
+#status {
+  position: fixed; bottom: 6px; left: 12px; font-size: 11px; color: #888;
+  z-index: 100; pointer-events: none;
+}
+#error {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: #2a1a1a; color: #ff9b9b; padding: 16px 24px; border-radius: 6px;
+  z-index: 200; max-width: 80%; display: none;
+}
+</style>
+</head>
+<body>
+
+<canvas id="main-canvas"></canvas>
+
+<div id="scroll-root">
+  <div id="prompt-panel">
+    <div id="prompt-full">Loading…</div>
+    <ul id="prompt-parts"></ul>
+  </div>
+  <div id="instruction">Drag rows by the <b>=</b> handle to rank from <b>BEST (top)</b> to <b>WORST (bottom)</b>. Drag any mesh to rotate; all six views stay synced.</div>
+  <ul id="rank-list"></ul>
+</div>
+
+<div id="status">Loading…</div>
+<div id="error"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+
+// ── Param parsing & validation ──
+const params = new URLSearchParams(window.location.search);
+const hitId = params.get('hitId');
+const trialIdxStr = params.get('i');
+
+const HIT_ID_RE = /^H_(?:[0-9]{4}|TUTORIAL)$/;
+const DIR_RE = /^[A-Za-z0-9_]+\/[a-f0-9]{16}$/;
+const VALID_SLOTS = ['A','B','C','D','E','F'];
+
+function fail(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('status').textContent = 'Error';
+  throw new Error(msg);
+}
+
+if (!hitId || !HIT_ID_RE.test(hitId)) fail('Bad hitId param');
+const trialIdx = parseInt(trialIdxStr, 10);
+if (!Number.isInteger(trialIdx) || trialIdx < 0 || trialIdx > 100) fail('Bad i param');
+
+// ── Fetch & validate trial ──
+const trialMap = await fetch('trialMap.json').then(r => {
+  if (!r.ok) throw new Error('trialMap fetch failed: ' + r.status);
+  return r.json();
+});
+const myTrials = trialMap[hitId];
+if (!Array.isArray(myTrials)) fail('Unknown hitId: ' + hitId);
+if (trialIdx >= myTrials.length) fail('Trial index out of range');
+const trial = myTrials[trialIdx];
+
+if (!trial || typeof trial !== 'object') fail('Invalid trial entry');
+if (!trial.prompt || typeof trial.prompt.FULL !== 'string') fail('Missing prompt.FULL');
+if (!Array.isArray(trial.prompt.parts)) fail('Missing prompt.parts');
+if (!Array.isArray(trial.slots) || trial.slots.length !== 6) fail('Bad slots length');
+
+const slotsSeen = new Set();
+for (const s of trial.slots) {
+  if (!s || !VALID_SLOTS.includes(s.slot)) fail('Bad slot id: ' + JSON.stringify(s));
+  if (slotsSeen.has(s.slot)) fail('Duplicate slot: ' + s.slot);
+  slotsSeen.add(s.slot);
+  if (typeof s.dir !== 'string' || !DIR_RE.test(s.dir)) fail('Bad dir: ' + s.dir);
+}
+if (slotsSeen.size !== 6) fail('Missing slot');
+
+// ── Render prompt header ──
+const promptFull = trial.prompt.FULL;
+const parts = trial.prompt.parts;
+document.getElementById('prompt-full').textContent = promptFull;
+const partsUl = document.getElementById('prompt-parts');
+partsUl.innerHTML = '';
+for (const p of parts) {
+  if (!p || typeof p.label !== 'string' || typeof p.caption !== 'string') continue;
+  const li = document.createElement('li');
+  li.innerHTML = `<b>${escapeHtml(p.label)}:</b> ${escapeHtml(p.caption)}`;
+  partsUl.appendChild(li);
+}
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Render slot rows in initial order (server-given A..F) ──
+const rankList = document.getElementById('rank-list');
+rankList.innerHTML = '';
+for (const s of trial.slots) {
+  const li = document.createElement('li');
+  li.className = 'rank-row';
+  li.dataset.slot = s.slot;
+  li.dataset.dir = s.dir;
+  li.innerHTML = `
+    <div class="row-handle" title="Drag to reorder">&#9776;</div>
+    <div class="row-rank"></div>
+    <div class="row-canvas-target"></div>
+    <div class="row-label">${s.slot}</div>
+  `;
+  rankList.appendChild(li);
+}
+
+function updateRankNumbers() {
+  const rows = rankList.querySelectorAll('.rank-row');
+  rows.forEach((r, i) => {
+    r.querySelector('.row-rank').textContent = (i + 1).toString();
+  });
+}
+function currentOrder() {
+  const rows = rankList.querySelectorAll('.rank-row');
+  return Array.from(rows).map(r => r.dataset.slot).join('');
+}
+function postRankUpdate() {
+  const order = currentOrder();
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({
+      type: 'rank-update', hitId, i: trialIdx, order
+    }, '*');
+  }
+}
+updateRankNumbers();
+
+// ── SortableJS ──
+Sortable.create(rankList, {
+  handle: '.row-handle',
+  animation: 160,
+  ghostClass: 'rank-row-ghost',
+  chosenClass: 'rank-row-chosen',
+  onSort: () => {
+    updateRankNumbers();
+    postRankUpdate();
+  },
+});
+
+// ── Three.js renderer + scene infra (mirrors viewer-pair.html) ──
+const canvas = document.getElementById('main-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
+const statusEl = document.getElementById('status');
+let cells = [];
+let activeCell = null;
+let globalBBox = null;
+const ambientIntensity = 0.8;
+
+function computeSmoothNormals(geometry) {
+  const pos = geometry.attributes.position;
+  const count = pos.count;
+  const numFaces = Math.floor(count / 3);
+  const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+  const e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), fn = new THREE.Vector3();
+  const faceNormals = [];
+  for (let f = 0; f < numFaces; f++) {
+    vA.fromBufferAttribute(pos, f*3);
+    vB.fromBufferAttribute(pos, f*3+1);
+    vC.fromBufferAttribute(pos, f*3+2);
+    e1.subVectors(vB, vA);
+    e2.subVectors(vC, vA);
+    fn.crossVectors(e1, e2).normalize();
+    faceNormals.push(fn.clone());
+  }
+  const posMap = new Map();
+  const prec = 1e5;
+  for (let i = 0; i < count; i++) {
+    const key = `${Math.round(pos.array[i*3]*prec)},${Math.round(pos.array[i*3+1]*prec)},${Math.round(pos.array[i*3+2]*prec)}`;
+    if (!posMap.has(key)) posMap.set(key, []);
+    posMap.get(key).push(i);
+  }
+  const normals = new Float32Array(count * 3);
+  const avg = new THREE.Vector3();
+  for (const indices of posMap.values()) {
+    avg.set(0, 0, 0);
+    for (const idx of indices) avg.add(faceNormals[Math.floor(idx/3)]);
+    avg.normalize();
+    for (const idx of indices) {
+      normals[idx*3]   = avg.x;
+      normals[idx*3+1] = avg.y;
+      normals[idx*3+2] = avg.z;
+    }
+  }
+  geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+}
+
+async function loadMesh(objPath, mtlPath) {
+  const group = await new Promise((resolve, reject) => {
+    const dir = mtlPath.substring(0, mtlPath.lastIndexOf('/') + 1);
+    const file = mtlPath.substring(mtlPath.lastIndexOf('/') + 1);
+    const ml = new MTLLoader();
+    ml.setPath(dir);
+    ml.load(
+      file,
+      (mats) => {
+        mats.preload();
+        const ol = new OBJLoader();
+        ol.setMaterials(mats);
+        ol.load(objPath, resolve, undefined, reject);
+      },
+      undefined,
+      () => { new OBJLoader().load(objPath, resolve, undefined, reject); },
+    );
+  });
+  group.traverse(child => {
+    if (child.isMesh) {
+      if (!child.geometry.index && child.geometry.attributes.position) {
+        computeSmoothNormals(child.geometry);
+      } else {
+        child.geometry.computeVertexNormals();
+      }
+      if (child.material) child.material.side = THREE.DoubleSide;
+    }
+  });
+  return group;
+}
+
+function createScene() {
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0x87CEEB, 0x362e1e, ambientIntensity));
+  const sun  = new THREE.DirectionalLight(0xfff4e0, 1.0); sun.position.set(5, 8, 6);   scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xc0d8ff, 0.4); fill.position.set(-4, 2, -3); scene.add(fill);
+  const rim  = new THREE.DirectionalLight(0xffffff, 0.2); rim.position.set(0, -3, -5); scene.add(rim);
+  return scene;
+}
+
+function createCell(meshGroup, slotEl, slotName) {
+  const scene = createScene();
+  scene.add(meshGroup);
+
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+  const center = globalBBox.getCenter(new THREE.Vector3());
+  const size   = globalBBox.getSize(new THREE.Vector3()).length();
+  camera.position.set(center.x, center.y, center.z + size * 1.2);
+  camera.lookAt(center);
+
+  const controlEl = document.createElement('div');
+  controlEl.className = 'row-cell-overlay';
+  slotEl.appendChild(controlEl);
+
+  const controls = new OrbitControls(camera, controlEl);
+  controls.target.copy(center);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.1;
+  controls.update();
+
+  const cell = { scene, camera, controls, slotEl, meshGroup, center, size, slotName };
+
+  controlEl.addEventListener('pointerdown', () => { activeCell = cell; });
+
+  cells.push(cell);
+  return cell;
+}
+
+const assetUrl = (dir, file) => `data/${dir}/${file}`;
+
+async function loadAllPanels() {
+  // Iterate the rank-row LI elements in DOM order so each cell binds to its
+  // canvas-target div. Rank ordering changes the LI order in the list, but
+  // the cell.slotEl reference still points to the right canvas-target div
+  // (which moves with its parent LI), so scissor regions follow.
+  const rows = rankList.querySelectorAll('.rank-row');
+  for (const row of rows) {
+    const dir = row.dataset.dir;
+    const slot = row.dataset.slot;
+    const target = row.querySelector('.row-canvas-target');
+    const objPath = assetUrl(dir, 'textured.obj');
+    const mtlPath = assetUrl(dir, 'textured.mtl');
+    let meshGroup;
+    try {
+      meshGroup = await loadMesh(objPath, mtlPath);
+    } catch (e) {
+      console.error('mesh load failed', slot, dir, e);
+      continue;
+    }
+    if (!globalBBox) globalBBox = new THREE.Box3().setFromObject(meshGroup);
+    createCell(meshGroup, target, slot);
+    statusEl.textContent = `Loaded ${cells.length}/6 panels`;
+  }
+  if (cells.length) activeCell = cells[0];
+}
+
+function renderAll() {
+  requestAnimationFrame(renderAll);
+
+  if (cells.length > 0) {
+    const master = activeCell || cells[0];
+    master.controls.update();
+    const relPos       = master.camera.position.clone().sub(master.controls.target);
+    const masterTarget = master.controls.target.clone();
+    for (const c of cells) {
+      if (c === master) continue;
+      c.controls.target.copy(masterTarget);
+      c.camera.position.copy(masterTarget).add(relPos);
+      c.camera.quaternion.copy(master.camera.quaternion);
+      c.controls.update();
+    }
+  }
+
+  const W = window.innerWidth, H = window.innerHeight;
+  if (canvas.width !== W * devicePixelRatio || canvas.height !== H * devicePixelRatio) {
+    renderer.setSize(W, H);
+  }
+
+  renderer.setScissorTest(false);
+  renderer.setClearColor(0x1a1a1a);
+  renderer.clear();
+  renderer.setScissorTest(true);
+
+  for (const c of cells) {
+    const rect = c.slotEl.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > H || rect.right < 0 || rect.left > W) continue;
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    const x = rect.left;
+    const y = H - rect.bottom;
+    const w = rect.width;
+    const h = rect.height;
+    renderer.setViewport(x, y, w, h);
+    renderer.setScissor(x, y, w, h);
+    c.camera.aspect = w / h;
+    c.camera.updateProjectionMatrix();
+    renderer.render(c.scene, c.camera);
+  }
+}
+
+(async function init() {
+  try {
+    await loadAllPanels();
+    statusEl.textContent = `Loaded ${cells.length}/6 panels — drag to reorder`;
+    renderAll();
+    // Tell parent we are ready and announce initial order (= server slot order A..F).
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'viewer-rank-ready',
+        hitId, i: trialIdx,
+        order: currentOrder(),
+      }, '*');
+    }
+  } catch (e) {
+    console.error(e);
+    fail('Load failed: ' + (e && e.message ? e.message : e));
+  }
+})();
+</script>
+</body>
+</html>

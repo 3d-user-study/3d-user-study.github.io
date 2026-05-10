@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """Mean-of-samples aggregate ranking with paired-bootstrap 95% CI.
 
-Input:  texture-study/analysis/bt_per_sample.csv  (output of fit_bt.py)
-Output: texture-study/analysis/bt_aggregate.csv
+Input:  texture-study/analysis/pl_per_sample.csv  (output of fit_pl.py)
+Output: texture-study/analysis/pl_aggregate.csv
         Columns: rank, method, mean_score, low_ci, high_ci, n_samples
 
 Procedure
 ---------
-The aggregate score for method m is the mean of its per-sample BT scores
+The aggregate score for method m is the mean of its per-sample PL scores
 across the N samples for which we have data. Confidence intervals come
 from PAIRED bootstrap: at each iteration we resample SAMPLES with
-replacement (NOT individual judgments -- that uncertainty is already
-captured in fit_bt.py's per-sample CIs) and recompute every method's
+replacement (NOT individual rankings -- that uncertainty is already
+captured in fit_pl.py's per-sample CIs) and recompute every method's
 mean from the resampled set. Resampling samples (rather than per-method
 independently) preserves the within-sample correlation between methods,
 which is the right CI for the question "if I ran this study on a
@@ -37,17 +37,17 @@ CI_HIGH: float = 97.5
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--bt_per_sample", type=Path,
-                        default=Path("texture-study/analysis/bt_per_sample.csv"))
+    parser.add_argument("--pl_per_sample", type=Path,
+                        default=Path("texture-study/analysis/pl_per_sample.csv"))
     parser.add_argument("--out_csv",       type=Path,
-                        default=Path("texture-study/analysis/bt_aggregate.csv"))
+                        default=Path("texture-study/analysis/pl_aggregate.csv"))
     parser.add_argument("--bootstrap_iter", type=int, default=BOOTSTRAP_ITER)
     parser.add_argument("--seed",           type=int, default=2024)
     args = parser.parse_args()
 
-    df = pd.read_csv(args.bt_per_sample)
+    df = pd.read_csv(args.pl_per_sample)
     if df.empty:
-        sys.exit(f"{args.bt_per_sample} is empty; run fit_bt.py first")
+        sys.exit(f"{args.pl_per_sample} is empty; run fit_pl.py first")
 
     samples = sorted(df["sample"].unique())
     n_samples = len(samples)

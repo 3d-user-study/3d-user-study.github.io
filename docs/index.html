@@ -23,24 +23,35 @@ body {
   flex: 1 1 auto; padding: 24px; max-width: 880px; width: 100%;
   margin: 0 auto;
 }
-.viewer-wrap { flex: 1 1 auto; position: relative; min-height: 480px; }
+.screen-fluid {
+  flex: 1 1 auto; padding: 0; max-width: 100%; width: 100%;
+  display: flex; flex-direction: column;
+}
+.viewer-wrap {
+  flex: 1 1 auto; position: relative; min-height: 600px;
+}
 iframe {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   border: 0;
 }
 .choices {
-  display: flex; gap: 16px; justify-content: center;
+  display: flex; gap: 16px; justify-content: center; align-items: center;
   padding: 16px 24px; background: #222; border-top: 1px solid #333;
+  flex: 0 0 auto;
 }
 .btn {
   padding: 10px 28px; font-size: 15px; cursor: pointer;
   background: #2a64d6; color: white; border: 0; border-radius: 6px;
-  font-weight: 600; min-width: 140px;
+  font-weight: 600; min-width: 160px;
 }
 .btn:hover:not(:disabled) { background: #3a78ea; }
 .btn.secondary { background: #444; }
 .btn.secondary:hover:not(:disabled) { background: #555; }
 .btn:disabled { background: #333; color: #888; cursor: not-allowed; }
+.choice-info {
+  font-size: 13px; color: #aaa; min-width: 220px; text-align: left;
+}
+.choice-info b { color: #fff; font-weight: 600; }
 h2 { margin: 0 0 12px; font-size: 22px; }
 h3 { margin: 16px 0 8px; font-size: 16px; }
 p { margin: 0 0 12px; }
@@ -107,8 +118,21 @@ const turkSubmitTo = url.searchParams.get('turkSubmitTo')
 
 const screenEl   = document.getElementById('screen');
 const progressEl = document.getElementById('progress');
+const appEl      = document.getElementById('app');
+
+const ORDER_RE = /^[A-F]{6}$/;
+function isValidOrder(s) {
+  if (typeof s !== 'string' || !ORDER_RE.test(s)) return false;
+  const seen = new Set();
+  for (const ch of s) {
+    if (seen.has(ch)) return false;
+    seen.add(ch);
+  }
+  return seen.size === 6;
+}
 
 function fail(msg) {
+  screenEl.className = 'screen';
   screenEl.innerHTML = `<div class="error">${msg}</div>`;
   progressEl.textContent = '';
 }
@@ -143,36 +167,66 @@ if (!Array.isArray(tutorialEntries) || tutorialEntries.length < 1) {
   fail('Tutorial entry missing. Please contact the requester.');
   throw new Error('no tutorial');
 }
-const tut = tutorialEntries[0];
 
-const selections = new Array(25).fill(null);
+const selections = new Array(25).fill(null);  // each entry: 6-char rank string
+let liveOrder = null;        // latest order posted by the iframe for current trial
+let liveTrialKey = null;     // {hitId, i} pair the live order applies to
+
+window.addEventListener('message', (ev) => {
+  const d = ev.data;
+  if (!d || typeof d !== 'object') return;
+  if (d.type !== 'rank-update' && d.type !== 'viewer-rank-ready') return;
+  if (typeof d.hitId !== 'string' || !Number.isInteger(d.i)) return;
+  if (!isValidOrder(d.order)) return;
+  liveOrder = d.order;
+  liveTrialKey = `${d.hitId}|${d.i}`;
+  // Enable the Next button if we are currently waiting on this trial.
+  const btn = document.getElementById('next_btn');
+  if (btn && btn.dataset.expectedKey === liveTrialKey) {
+    btn.disabled = false;
+    updateLiveOrderBadge();
+  }
+});
+
+function updateLiveOrderBadge() {
+  const badge = document.getElementById('rank_badge');
+  if (badge && liveOrder) {
+    badge.innerHTML = `Current rank: <b>${liveOrder.split('').join(' &gt; ')}</b>`;
+  }
+}
 
 const renderConsent = () => {
+  screenEl.className = 'screen';
   screenEl.innerHTML = `
     <h2>Consent &amp; Instructions</h2>
 
-    <p>You will compare pairs of 3D textured meshes and pick the one that
-    looks better. The study takes about <b>10 minutes</b> and pays
+    <p>You will compare <b>six</b> 3D textured meshes per trial and
+    <b>rank them</b> from best to worst by how well their texture matches
+    a written prompt. The study takes about <b>10 minutes</b> and pays
     <b>$2.00</b>.</p>
 
     <h3>What you will do</h3>
     <ul>
       <li>1 short tutorial trial (does not count toward your reward).</li>
-      <li>25 trials, each showing two textured 3D meshes side by side
-      labeled "Method A" and "Method B".</li>
-      <li>You can rotate / zoom each mesh; the two views stay synchronized.</li>
-      <li>Pick whichever mesh has the better-looking texture.</li>
+      <li>25 trials. Each trial shows the same 3D shape rendered with six
+      different textures, labeled <b>A</b>–<b>F</b>.</li>
+      <li>Read the prompt at the top (a full sentence plus per-part
+      captions describing the intended look).</li>
+      <li>Drag the rows by the <b>=</b> handle to rank the six textures
+      from <b>best (top)</b> to <b>worst (bottom)</b>.</li>
+      <li>You can rotate / zoom any mesh; all six views stay synchronized.</li>
     </ul>
 
     <h3>Quality checks</h3>
-    <p>Some trials are attention checks with an obvious correct answer.
-    Workers who fail the attention checks will be rejected.</p>
+    <p>Some trials contain an obviously corrupted texture that any
+    attentive worker would rank last. Workers who fail the attention
+    checks will be rejected.</p>
 
     <div class="consent">
       <p><b>Eligibility.</b> You must be 18 or older.</p>
       <p><b>Risks.</b> None beyond ordinary screen use.</p>
       <p><b>Privacy.</b> We record only your MTurk worker ID, your 25
-      selections, and your timing. No personal data is collected.</p>
+      rankings, and your timing. No personal data is collected.</p>
       <p><b>Voluntary.</b> You may stop at any time by closing the browser
       tab; in that case the HIT will not submit and you will not be paid.</p>
       <p><b>Contact.</b> Questions: <a href="mailto:kkh23834022@gmail.com"
@@ -202,76 +256,74 @@ const renderConsent = () => {
   }
 };
 
-function buildViewerUrl(hid, trial) {
-  const u = new URL('viewer-pair.html', location.href);
+function buildViewerUrl(hid, i) {
+  const u = new URL('viewer-rank.html', location.href);
   u.searchParams.set('hitId', hid);
-  u.searchParams.set('dirL',  trial.dirL);
-  u.searchParams.set('dirR',  trial.dirR);
-  if (trial.vig === 'L' || trial.vig === 'R') {
-    u.searchParams.set('vig', trial.vig);
-  }
+  u.searchParams.set('i', String(i));
   return u.toString();
 }
 
 const renderTutorial = () => {
   progressEl.textContent = 'Tutorial';
-  const tutUrl = buildViewerUrl('H_TUTORIAL', tut);
+  liveOrder = null;
+  liveTrialKey = null;
+  const tutUrl = buildViewerUrl('H_TUTORIAL', 0);
+  const expectedKey = 'H_TUTORIAL|0';
 
+  screenEl.className = 'screen-fluid';
   screenEl.innerHTML = `
-    <h2>Tutorial</h2>
-    <p>This is one practice trial. It does not count toward your reward.</p>
-    <p>Rotate either mesh; both views stay in sync. Click <b>Choose A</b>
-    or <b>Choose B</b> to continue.</p>
-    <div class="viewer-wrap"><iframe id="vf" src="${tutUrl}"></iframe></div>
+    <div class="viewer-wrap">
+      <iframe id="vf" src="${tutUrl}"></iframe>
+    </div>
     <div class="choices">
-      <button class="btn" id="tut_a" disabled>Choose A</button>
-      <button class="btn" id="tut_b" disabled>Choose B</button>
+      <div class="choice-info" id="rank_badge">
+        Tutorial — drag rows to practice ranking.
+      </div>
+      <button class="btn" id="next_btn" data-expected-key="${expectedKey}" disabled>Finish tutorial</button>
     </div>
   `;
-
-  const iframe = screenEl.querySelector('#vf');
-  const a = screenEl.querySelector('#tut_a');
-  const b = screenEl.querySelector('#tut_b');
-  iframe.addEventListener('load', () => { a.disabled = false; b.disabled = false; });
-  a.addEventListener('click', () => renderTrial(0));
-  b.addEventListener('click', () => renderTrial(0));
+  document.getElementById('next_btn').addEventListener('click', () => {
+    renderTrial(0);
+  });
 };
 
 const renderTrial = (idx) => {
   if (idx >= 25) { renderDone(); return; }
-  const trial = myTrials[idx];
-  const trialUrl = buildViewerUrl(hitId, trial);
+  liveOrder = null;
+  liveTrialKey = null;
+  const trialUrl = buildViewerUrl(hitId, idx);
+  const expectedKey = `${hitId}|${idx}`;
 
   progressEl.textContent = `Trial ${idx + 1} of 25`;
+  screenEl.className = 'screen-fluid';
   screenEl.innerHTML = `
-    <div class="viewer-wrap"><iframe id="vf" src="${trialUrl}"></iframe></div>
+    <div class="viewer-wrap">
+      <iframe id="vf" src="${trialUrl}"></iframe>
+    </div>
     <div class="choices">
-      <button class="btn" id="ch_a" disabled>Choose A</button>
-      <button class="btn" id="ch_b" disabled>Choose B</button>
+      <div class="choice-info" id="rank_badge">
+        Loading… drag rows to rank from best (top) to worst (bottom).
+      </div>
+      <button class="btn" id="next_btn" data-expected-key="${expectedKey}" disabled>${idx === 24 ? 'Submit ranking & finish' : 'Submit ranking & next'}</button>
     </div>
   `;
-
-  const iframe = screenEl.querySelector('#vf');
-  const a = screenEl.querySelector('#ch_a');
-  const b = screenEl.querySelector('#ch_b');
-  let chosen = false;
-  iframe.addEventListener('load', () => { a.disabled = false; b.disabled = false; });
-  const pick = (val) => {
-    if (chosen) return;
-    chosen = true;
-    a.disabled = true; b.disabled = true;
-    selections[idx] = val;
+  document.getElementById('next_btn').addEventListener('click', () => {
+    if (!isValidOrder(liveOrder)) {
+      // Should not happen because button is disabled until rank-update arrives.
+      return;
+    }
+    if (liveTrialKey !== expectedKey) return;
+    selections[idx] = liveOrder;
     renderTrial(idx + 1);
-  };
-  a.addEventListener('click', () => pick('a'));
-  b.addEventListener('click', () => pick('b'));
+  });
 };
 
 const renderDone = () => {
   progressEl.textContent = 'All trials complete';
+  screenEl.className = 'screen';
   screenEl.innerHTML = `
     <h2>All done — thank you!</h2>
-    <p>Click <b>Submit HIT</b> to send your selections to MTurk and finish.</p>
+    <p>Click <b>Submit HIT</b> to send your rankings to MTurk and finish.</p>
     <p class="muted">After submission MTurk will display its standard
     completion page. The requester will review and approve within 48 hours.</p>
     <button class="btn" id="submit_btn">Submit HIT</button>
@@ -286,8 +338,8 @@ const renderDone = () => {
 };
 
 function submitHIT() {
-  if (selections.some(v => v !== 'a' && v !== 'b')) {
-    fail('Internal error: missing selections.');
+  if (selections.some(v => !isValidOrder(v))) {
+    fail('Internal error: missing or invalid rankings.');
     return;
   }
 
@@ -300,7 +352,7 @@ function submitHIT() {
   for (let i = 0; i < 25; i++) {
     const inp = document.createElement('input');
     inp.type = 'hidden';
-    inp.name = `selection${i + 1}`;
+    inp.name = `rank${i + 1}`;
     inp.value = selections[i];
     form.appendChild(inp);
   }

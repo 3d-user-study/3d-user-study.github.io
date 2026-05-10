@@ -23,7 +23,12 @@ Usage (run from repo root):
 
 Outputs:
   texture-study/docs/data/{sample}/{hash16}/textured.{obj,mtl,png}
-  texture-study/scripts/method_hash_map.json   # PRIVATE: {sample: {method: hash}}
+  texture-study/docs/data/{sample}/{corrupt_hash16}/textured.{obj,mtl,png}
+                                                # vigilance bait: shared OBJ
+                                                # topology + random-noise PNG
+                                                # so the prompted object renders
+                                                # with an obviously-broken texture
+  texture-study/scripts/method_hash_map.json   # PRIVATE: {sample: {method-or-_corrupt: hash}}
   texture-study/scripts/.dehydrate_salt        # PRIVATE: 256-bit hex secret
 """
 
@@ -37,11 +42,24 @@ import shutil
 import sys
 from pathlib import Path
 
+import numpy as np
+from PIL import Image
+
 DEFAULT_SALT_PATH = Path("texture-study/scripts/.dehydrate_salt")
 DEFAULT_SOURCE = Path("portable_viewer/data")
 DEFAULT_DEST = Path("texture-study/docs/data")
 DEFAULT_MAP = Path("texture-study/scripts/method_hash_map.json")
-HASH_LEN = 16  # 64 bits truncated sha256; collision prob ~5e-15 for 324 cells
+HASH_LEN = 16  # 64 bits truncated sha256; collision prob ~5e-15 for 378 cells
+
+# Sentinel hashed identically to real methods (same salt guards corrupt dir
+# name) but flagged separately so gen_hits.py picks it only for vigilance.
+CORRUPT_METHOD = "_corrupt"
+
+# Donor must share OBJ topology with the prompted object. spotex is one of the
+# 5 shared-topology methods; mvadapter has its own UV layout and is unsuitable.
+CORRUPT_OBJ_DONOR = "spotex"
+CORRUPT_PNG_SIZE = 512
+CORRUPT_PNG_SEED_BASE = 0xC0FFEE  # XOR with sample-name hash -> per-sample seed
 
 
 def load_or_create_salt(path: Path) -> str:
@@ -61,6 +79,44 @@ def load_or_create_salt(path: Path) -> str:
 def method_hash(sample: str, method: str, salt: str) -> str:
     h = hashlib.sha256(f"{sample}:{method}:{salt}".encode("utf-8")).hexdigest()
     return h[:HASH_LEN]
+
+
+def _make_corrupt_png(sample: str, dest_path: Path) -> None:
+    sample_hash = int(hashlib.sha256(sample.encode("utf-8")).hexdigest()[:8], 16)
+    seed = (CORRUPT_PNG_SEED_BASE ^ sample_hash) & 0xFFFFFFFF
+    rng = np.random.default_rng(seed)
+    arr = rng.integers(0, 256, size=(CORRUPT_PNG_SIZE, CORRUPT_PNG_SIZE, 3), dtype=np.uint8)
+    Image.fromarray(arr, mode="RGB").save(dest_path, format="PNG", optimize=True)
+
+
+def _build_corrupt_dir(
+    sample: str,
+    sample_dir: Path,
+    dest_dir: Path,
+    mode: str,
+) -> int:
+    donor_dir = sample_dir / CORRUPT_OBJ_DONOR
+    if not donor_dir.is_dir():
+        sys.exit(f"FATAL: donor method '{CORRUPT_OBJ_DONOR}' missing for {sample}")
+    donor_obj = donor_dir / "textured.obj"
+    donor_mtl = donor_dir / "textured.mtl"
+    if not donor_obj.is_file() or not donor_mtl.is_file():
+        sys.exit(f"FATAL: donor OBJ/MTL missing in {donor_dir}")
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    n_written = 0
+    for src, dst_name in ((donor_obj, "textured.obj"), (donor_mtl, "textured.mtl")):
+        dst = dest_dir / dst_name
+        if dst.exists():
+            continue
+        shutil.copy2(src, dst)
+        n_written += 1
+
+    png_path = dest_dir / "textured.png"
+    if not png_path.exists():
+        _make_corrupt_png(sample, png_path)
+        n_written += 1
+    return n_written
 
 
 def main() -> None:
@@ -125,6 +181,18 @@ def main() -> None:
                 else:
                     shutil.move(str(src_file), str(dst_file))
                 n_files_copied += 1
+
+        corrupt_h = method_hash(sample, CORRUPT_METHOD, salt)
+        corrupt_key = (sample, corrupt_h)
+        if corrupt_key in seen_hashes:
+            sys.exit(f"FATAL: hash collision at {sample}/{CORRUPT_METHOD} -> {corrupt_h}")
+        seen_hashes.add(corrupt_key)
+        method_hash_map[sample][CORRUPT_METHOD] = corrupt_h
+
+        corrupt_dest = args.dest / sample / corrupt_h
+        n_dirs_planned += 1
+        if not args.dry_run:
+            n_files_copied += _build_corrupt_dir(sample, sample_dir, corrupt_dest, args.mode)
 
     args.map.parent.mkdir(parents=True, exist_ok=True)
     if not args.dry_run:
