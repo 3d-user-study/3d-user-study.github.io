@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Method Rank Viewer</title>
+<title>Method Grid Viewer</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; overflow: hidden; }
@@ -13,17 +13,18 @@ body {
 }
 #main-canvas {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+  pointer-events: none;
 }
-#scroll-root {
+#layout {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  overflow-y: auto; z-index: 1;
+  display: flex; flex-direction: column; z-index: 1;
 }
 
 #prompt-panel {
-  position: sticky; top: 0; z-index: 5;
+  flex: 0 0 auto;
   background: rgba(20,20,20,0.96);
   padding: 10px 18px; border-bottom: 1px solid #333;
-  pointer-events: auto;
+  max-height: 28vh; overflow-y: auto;
 }
 #prompt-full {
   font-size: 14px; font-weight: 600; color: #fff;
@@ -31,65 +32,49 @@ body {
 }
 #prompt-parts {
   font-size: 12px; color: #bbb; line-height: 1.4;
-  margin: 2px 0 0 0;
+  margin: 2px 0 0 0; list-style: none;
 }
-#prompt-parts li { margin-left: 18px; }
+#prompt-parts li { margin-left: 0; padding-left: 12px; position: relative; }
+#prompt-parts li::before {
+  content: '•'; position: absolute; left: 0; color: #666;
+}
 
 #instruction {
   background: #1f3a5f; color: #cfe1ff; font-size: 12px;
   padding: 6px 18px; border-bottom: 1px solid #333;
-  pointer-events: auto;
+  flex: 0 0 auto;
 }
 
-#rank-list {
-  margin: 0; padding: 0; list-style: none;
-  pointer-events: auto;
+#grid {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 1px;
+  background: transparent;
+  min-height: 0;
 }
-.rank-row {
-  display: flex; align-items: stretch;
-  height: 200px;
-  background: rgba(30,30,30,0.65);
-  border-bottom: 1px solid #333;
+.cell {
+  position: relative;
+  background: transparent;
+  overflow: hidden;
 }
-.row-handle {
-  flex: 0 0 40px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: grab; color: #888;
-  font-size: 24px; user-select: none;
-  background: rgba(40,40,40,0.7);
-  border-right: 1px solid #333;
-}
-.row-handle:hover { color: #fff; background: rgba(60,60,60,0.8); }
-.row-handle:active { cursor: grabbing; }
-.row-rank {
-  flex: 0 0 50px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 700; color: #2a64d6;
-  background: rgba(40,40,40,0.5);
-  border-right: 1px solid #333;
-  user-select: none;
-}
-.row-canvas-target {
-  flex: 1 1 auto; position: relative; min-width: 0;
-}
-.row-cell-overlay {
+.cell-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  pointer-events: auto;
+  cursor: grab;
 }
-.row-label {
-  flex: 0 0 36px;
+.cell-overlay:active { cursor: grabbing; }
+.cell-label {
+  position: absolute; top: 8px; left: 8px;
+  width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #aaa;
-  background: rgba(40,40,40,0.5);
-  border-left: 1px solid #333;
+  font-size: 18px; font-weight: 700; color: #fff;
+  background: rgba(42,100,214,0.85);
+  border-radius: 4px;
+  pointer-events: none;
   user-select: none;
-}
-
-.rank-row-ghost {
-  opacity: 0.4;
-}
-.rank-row-chosen {
-  background: rgba(42,100,214,0.25);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  z-index: 2;
 }
 
 #status {
@@ -107,19 +92,17 @@ body {
 
 <canvas id="main-canvas"></canvas>
 
-<div id="scroll-root">
+<div id="layout">
   <div id="prompt-panel">
     <div id="prompt-full">Loading…</div>
     <ul id="prompt-parts"></ul>
   </div>
-  <div id="instruction">Drag rows by the <b>=</b> handle to rank from <b>BEST (top)</b> to <b>WORST (bottom)</b>. Drag any mesh to rotate; all six views stay synced.</div>
-  <ul id="rank-list"></ul>
+  <div id="instruction">Inspect all six textured meshes (<b>A</b>–<b>F</b>) below. Drag any mesh to rotate; all six views stay synchronized. Use the rank chips beneath this viewer to rank from BEST to WORST.</div>
+  <div id="grid"></div>
 </div>
 
 <div id="status">Loading…</div>
 <div id="error"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script type="importmap">
 {
@@ -199,56 +182,22 @@ function escapeHtml(s) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// ── Render slot rows in initial order (server-given A..F) ──
-const rankList = document.getElementById('rank-list');
-rankList.innerHTML = '';
+// ── Render 3x2 grid cells in server slot order (A..F) ──
+const gridEl = document.getElementById('grid');
+gridEl.innerHTML = '';
 for (const s of trial.slots) {
-  const li = document.createElement('li');
-  li.className = 'rank-row';
-  li.dataset.slot = s.slot;
-  li.dataset.dir = s.dir;
-  li.innerHTML = `
-    <div class="row-handle" title="Drag to reorder">&#9776;</div>
-    <div class="row-rank"></div>
-    <div class="row-canvas-target"></div>
-    <div class="row-label">${s.slot}</div>
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.dataset.slot = s.slot;
+  cell.dataset.dir = s.dir;
+  cell.innerHTML = `
+    <div class="cell-label">${s.slot}</div>
+    <div class="cell-overlay"></div>
   `;
-  rankList.appendChild(li);
+  gridEl.appendChild(cell);
 }
 
-function updateRankNumbers() {
-  const rows = rankList.querySelectorAll('.rank-row');
-  rows.forEach((r, i) => {
-    r.querySelector('.row-rank').textContent = (i + 1).toString();
-  });
-}
-function currentOrder() {
-  const rows = rankList.querySelectorAll('.rank-row');
-  return Array.from(rows).map(r => r.dataset.slot).join('');
-}
-function postRankUpdate() {
-  const order = currentOrder();
-  if (window.parent && window.parent !== window) {
-    window.parent.postMessage({
-      type: 'rank-update', hitId, i: trialIdx, order
-    }, '*');
-  }
-}
-updateRankNumbers();
-
-// ── SortableJS ──
-Sortable.create(rankList, {
-  handle: '.row-handle',
-  animation: 160,
-  ghostClass: 'rank-row-ghost',
-  chosenClass: 'rank-row-chosen',
-  onSort: () => {
-    updateRankNumbers();
-    postRankUpdate();
-  },
-});
-
-// ── Three.js renderer + scene infra (mirrors viewer-pair.html) ──
+// ── Three.js renderer + scene infra ──
 const canvas = document.getElementById('main-canvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -339,7 +288,7 @@ function createScene() {
   return scene;
 }
 
-function createCell(meshGroup, slotEl, slotName) {
+function createCell(meshGroup, cellEl, slotName) {
   const scene = createScene();
   scene.add(meshGroup);
 
@@ -349,9 +298,7 @@ function createCell(meshGroup, slotEl, slotName) {
   camera.position.set(center.x, center.y, center.z + size * 1.2);
   camera.lookAt(center);
 
-  const controlEl = document.createElement('div');
-  controlEl.className = 'row-cell-overlay';
-  slotEl.appendChild(controlEl);
+  const controlEl = cellEl.querySelector('.cell-overlay');
 
   const controls = new OrbitControls(camera, controlEl);
   controls.target.copy(center);
@@ -359,7 +306,7 @@ function createCell(meshGroup, slotEl, slotName) {
   controls.dampingFactor = 0.1;
   controls.update();
 
-  const cell = { scene, camera, controls, slotEl, meshGroup, center, size, slotName };
+  const cell = { scene, camera, controls, cellEl, meshGroup, center, size, slotName };
 
   controlEl.addEventListener('pointerdown', () => { activeCell = cell; });
 
@@ -370,15 +317,10 @@ function createCell(meshGroup, slotEl, slotName) {
 const assetUrl = (dir, file) => `data/${dir}/${file}`;
 
 async function loadAllPanels() {
-  // Iterate the rank-row LI elements in DOM order so each cell binds to its
-  // canvas-target div. Rank ordering changes the LI order in the list, but
-  // the cell.slotEl reference still points to the right canvas-target div
-  // (which moves with its parent LI), so scissor regions follow.
-  const rows = rankList.querySelectorAll('.rank-row');
-  for (const row of rows) {
-    const dir = row.dataset.dir;
-    const slot = row.dataset.slot;
-    const target = row.querySelector('.row-canvas-target');
+  const cellEls = gridEl.querySelectorAll('.cell');
+  for (const cellEl of cellEls) {
+    const dir = cellEl.dataset.dir;
+    const slot = cellEl.dataset.slot;
     const objPath = assetUrl(dir, 'textured.obj');
     const mtlPath = assetUrl(dir, 'textured.mtl');
     let meshGroup;
@@ -389,7 +331,7 @@ async function loadAllPanels() {
       continue;
     }
     if (!globalBBox) globalBBox = new THREE.Box3().setFromObject(meshGroup);
-    createCell(meshGroup, target, slot);
+    createCell(meshGroup, cellEl, slot);
     statusEl.textContent = `Loaded ${cells.length}/6 panels`;
   }
   if (cells.length) activeCell = cells[0];
@@ -423,7 +365,7 @@ function renderAll() {
   renderer.setScissorTest(true);
 
   for (const c of cells) {
-    const rect = c.slotEl.getBoundingClientRect();
+    const rect = c.cellEl.getBoundingClientRect();
     if (rect.bottom < 0 || rect.top > H || rect.right < 0 || rect.left > W) continue;
     if (rect.width <= 0 || rect.height <= 0) continue;
     const x = rect.left;
@@ -441,14 +383,13 @@ function renderAll() {
 (async function init() {
   try {
     await loadAllPanels();
-    statusEl.textContent = `Loaded ${cells.length}/6 panels — drag to reorder`;
+    statusEl.textContent = `Loaded ${cells.length}/6 panels — drag any mesh to rotate`;
     renderAll();
-    // Tell parent we are ready and announce initial order (= server slot order A..F).
+    // Tell parent we are ready (parent owns rank state).
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({
-        type: 'viewer-rank-ready',
+        type: 'viewer-ready',
         hitId, i: trialIdx,
-        order: currentOrder(),
       }, '*');
     }
   } catch (e) {

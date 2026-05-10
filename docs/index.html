@@ -28,16 +28,51 @@ body {
   display: flex; flex-direction: column;
 }
 .viewer-wrap {
-  flex: 1 1 auto; position: relative; min-height: 600px;
+  flex: 1 1 auto; position: relative; min-height: 480px;
 }
 iframe {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   border: 0;
 }
 .choices {
-  display: flex; gap: 16px; justify-content: center; align-items: center;
-  padding: 16px 24px; background: #222; border-top: 1px solid #333;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px 24px 16px; background: #222; border-top: 1px solid #333;
   flex: 0 0 auto;
+}
+.rank-section {
+  display: flex; align-items: center; gap: 16px; justify-content: center;
+}
+.rank-edge {
+  font-size: 12px; font-weight: 700; color: #aaa;
+  letter-spacing: 0.5px; min-width: 60px;
+}
+.rank-edge.left  { text-align: right; color: #6cf08c; }
+.rank-edge.right { text-align: left;  color: #ff8a8a; }
+.rank-strip {
+  display: flex; gap: 8px; list-style: none; padding: 0; margin: 0;
+}
+.rank-chip {
+  width: 56px; height: 48px; border-radius: 6px;
+  background: #2f2f2f; border: 1px solid #444;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: grab; user-select: none;
+  position: relative;
+  transition: background 80ms, border-color 80ms;
+}
+.rank-chip:hover { background: #3a3a3a; border-color: #666; }
+.rank-chip:active { cursor: grabbing; }
+.rank-chip-letter {
+  font-size: 18px; font-weight: 700; color: #fff;
+  line-height: 1;
+}
+.rank-chip-pos {
+  font-size: 10px; color: #888; margin-top: 2px;
+  line-height: 1;
+}
+.rank-chip-ghost { opacity: 0.4; }
+.rank-chip-chosen { background: rgba(42,100,214,0.35); border-color: #2a64d6; }
+.action-row {
+  display: flex; align-items: center; gap: 16px; justify-content: center;
 }
 .btn {
   padding: 10px 28px; font-size: 15px; cursor: pointer;
@@ -92,6 +127,8 @@ li { margin: 4px 0; }
      clearing cache / different browser / different device. The README's
      "Limitations" section documents the post-hoc workerId-cap filter that
      scripts/reconcile.py applies for true enforcement. -->
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script type="module">
 const UT_ID = 'spotex_texture_v1_20260509';
@@ -169,30 +206,104 @@ if (!Array.isArray(tutorialEntries) || tutorialEntries.length < 1) {
 }
 
 const selections = new Array(25).fill(null);  // each entry: 6-char rank string
-let liveOrder = null;        // latest order posted by the iframe for current trial
-let liveTrialKey = null;     // {hitId, i} pair the live order applies to
+
+// Track which trial the iframe last reported as ready, so the Submit button
+// is only enabled once the worker can actually see the meshes.
+let viewerReadyKey = null;
+let currentSortable = null;
 
 window.addEventListener('message', (ev) => {
   const d = ev.data;
   if (!d || typeof d !== 'object') return;
-  if (d.type !== 'rank-update' && d.type !== 'viewer-rank-ready') return;
+  if (d.type !== 'viewer-ready') return;
   if (typeof d.hitId !== 'string' || !Number.isInteger(d.i)) return;
-  if (!isValidOrder(d.order)) return;
-  liveOrder = d.order;
-  liveTrialKey = `${d.hitId}|${d.i}`;
-  // Enable the Next button if we are currently waiting on this trial.
+  viewerReadyKey = `${d.hitId}|${d.i}`;
   const btn = document.getElementById('next_btn');
-  if (btn && btn.dataset.expectedKey === liveTrialKey) {
+  if (btn && btn.dataset.expectedKey === viewerReadyKey) {
     btn.disabled = false;
-    updateLiveOrderBadge();
+    updateRankBadge();
   }
 });
 
-function updateLiveOrderBadge() {
+function buildViewerUrl(hid, i) {
+  const u = new URL('viewer-rank.html', location.href);
+  u.searchParams.set('hitId', hid);
+  u.searchParams.set('i', String(i));
+  return u.toString();
+}
+
+function getTrialSlots(hid, idx) {
+  const trials = trialMap[hid];
+  if (!Array.isArray(trials) || idx < 0 || idx >= trials.length) return null;
+  const t = trials[idx];
+  if (!t || !Array.isArray(t.slots) || t.slots.length !== 6) return null;
+  return t.slots;
+}
+
+function currentOrderFromStrip() {
+  const strip = document.getElementById('rank_strip');
+  if (!strip) return null;
+  const chips = strip.querySelectorAll('.rank-chip');
+  return Array.from(chips).map(c => c.dataset.slot).join('');
+}
+
+function updateRankBadge() {
   const badge = document.getElementById('rank_badge');
-  if (badge && liveOrder) {
-    badge.innerHTML = `Current rank: <b>${liveOrder.split('').join(' &gt; ')}</b>`;
+  const order = currentOrderFromStrip();
+  if (!badge) return;
+  if (!order) {
+    badge.textContent = 'Loading meshes…';
+    return;
   }
+  const pretty = order.split('').join(' › ');
+  badge.innerHTML = `Current rank (best → worst): <b>${pretty}</b>`;
+}
+
+function updateChipPositions() {
+  const strip = document.getElementById('rank_strip');
+  if (!strip) return;
+  const chips = strip.querySelectorAll('.rank-chip');
+  chips.forEach((c, i) => {
+    const posEl = c.querySelector('.rank-chip-pos');
+    if (posEl) posEl.textContent = `#${i + 1}`;
+  });
+}
+
+function renderRankStrip(slots) {
+  // Server-given slot order is the initial rank (left = best).
+  const items = slots.map(s => `
+    <li class="rank-chip" data-slot="${s.slot}" title="Drag to reorder">
+      <div class="rank-chip-letter">${s.slot}</div>
+      <div class="rank-chip-pos">#1</div>
+    </li>
+  `).join('');
+  return `
+    <div class="rank-section">
+      <div class="rank-edge left">BEST</div>
+      <ul class="rank-strip" id="rank_strip">${items}</ul>
+      <div class="rank-edge right">WORST</div>
+    </div>
+  `;
+}
+
+function attachSortable() {
+  const strip = document.getElementById('rank_strip');
+  if (!strip) return;
+  // Previous Sortable's element was wiped by screenEl.innerHTML; SortableJS
+  // throws inside destroy() when its bound element is no longer in the DOM.
+  // We don't actually need to destroy a stale instance (it's already
+  // unreachable and will be GC'd) — just drop the reference.
+  currentSortable = null;
+  currentSortable = Sortable.create(strip, {
+    animation: 160,
+    ghostClass: 'rank-chip-ghost',
+    chosenClass: 'rank-chip-chosen',
+    onSort: () => {
+      updateChipPositions();
+      updateRankBadge();
+    },
+  });
+  updateChipPositions();
 }
 
 const renderConsent = () => {
@@ -209,12 +320,15 @@ const renderConsent = () => {
     <ul>
       <li>1 short tutorial trial (does not count toward your reward).</li>
       <li>25 trials. Each trial shows the same 3D shape rendered with six
-      different textures, labeled <b>A</b>–<b>F</b>.</li>
+      different textures, arranged in a <b>3×2 grid</b> and labeled
+      <b>A</b>–<b>F</b>.</li>
       <li>Read the prompt at the top (a full sentence plus per-part
       captions describing the intended look).</li>
-      <li>Drag the rows by the <b>=</b> handle to rank the six textures
-      from <b>best (top)</b> to <b>worst (bottom)</b>.</li>
-      <li>You can rotate / zoom any mesh; all six views stay synchronized.</li>
+      <li>Below the grid are six rank chips labeled A–F. <b>Drag the chips
+      left-to-right</b> so the best texture is on the left and the worst
+      is on the right.</li>
+      <li>You can rotate / zoom any mesh in the grid; all six views stay
+      synchronized.</li>
     </ul>
 
     <h3>Quality checks</h3>
@@ -256,17 +370,13 @@ const renderConsent = () => {
   }
 };
 
-function buildViewerUrl(hid, i) {
-  const u = new URL('viewer-rank.html', location.href);
-  u.searchParams.set('hitId', hid);
-  u.searchParams.set('i', String(i));
-  return u.toString();
-}
-
 const renderTutorial = () => {
   progressEl.textContent = 'Tutorial';
-  liveOrder = null;
-  liveTrialKey = null;
+  viewerReadyKey = null;
+
+  const tutSlots = getTrialSlots('H_TUTORIAL', 0);
+  if (!tutSlots) { fail('Tutorial slots missing or malformed.'); return; }
+
   const tutUrl = buildViewerUrl('H_TUTORIAL', 0);
   const expectedKey = 'H_TUTORIAL|0';
 
@@ -276,12 +386,15 @@ const renderTutorial = () => {
       <iframe id="vf" src="${tutUrl}"></iframe>
     </div>
     <div class="choices">
-      <div class="choice-info" id="rank_badge">
-        Tutorial — drag rows to practice ranking.
+      ${renderRankStrip(tutSlots)}
+      <div class="action-row">
+        <div class="choice-info" id="rank_badge">Loading meshes…</div>
+        <button class="btn" id="next_btn" data-expected-key="${expectedKey}" disabled>Finish tutorial</button>
       </div>
-      <button class="btn" id="next_btn" data-expected-key="${expectedKey}" disabled>Finish tutorial</button>
     </div>
   `;
+  attachSortable();
+  updateRankBadge();
   document.getElementById('next_btn').addEventListener('click', () => {
     renderTrial(0);
   });
@@ -289,8 +402,11 @@ const renderTutorial = () => {
 
 const renderTrial = (idx) => {
   if (idx >= 25) { renderDone(); return; }
-  liveOrder = null;
-  liveTrialKey = null;
+  viewerReadyKey = null;
+
+  const slots = getTrialSlots(hitId, idx);
+  if (!slots) { fail('Trial slots missing or malformed.'); return; }
+
   const trialUrl = buildViewerUrl(hitId, idx);
   const expectedKey = `${hitId}|${idx}`;
 
@@ -301,19 +417,23 @@ const renderTrial = (idx) => {
       <iframe id="vf" src="${trialUrl}"></iframe>
     </div>
     <div class="choices">
-      <div class="choice-info" id="rank_badge">
-        Loading… drag rows to rank from best (top) to worst (bottom).
+      ${renderRankStrip(slots)}
+      <div class="action-row">
+        <div class="choice-info" id="rank_badge">Loading meshes…</div>
+        <button class="btn" id="next_btn" data-expected-key="${expectedKey}" disabled>${idx === 24 ? 'Submit ranking & finish' : 'Submit ranking & next'}</button>
       </div>
-      <button class="btn" id="next_btn" data-expected-key="${expectedKey}" disabled>${idx === 24 ? 'Submit ranking & finish' : 'Submit ranking & next'}</button>
     </div>
   `;
+  attachSortable();
+  updateRankBadge();
   document.getElementById('next_btn').addEventListener('click', () => {
-    if (!isValidOrder(liveOrder)) {
-      // Should not happen because button is disabled until rank-update arrives.
+    const order = currentOrderFromStrip();
+    if (!isValidOrder(order)) {
+      // Should not happen: 6 chips are always present in a unique permutation.
       return;
     }
-    if (liveTrialKey !== expectedKey) return;
-    selections[idx] = liveOrder;
+    if (viewerReadyKey !== expectedKey) return;
+    selections[idx] = order;
     renderTrial(idx + 1);
   });
 };
