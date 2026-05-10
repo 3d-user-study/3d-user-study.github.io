@@ -628,6 +628,8 @@ function initPartMasterControls() {
   partMasterControls.target.copy(center);
   partMasterControls.enableDamping = true;
   partMasterControls.dampingFactor = 0.1;
+  partMasterControls.enableZoom = true;
+  partMasterControls.zoomSpeed = 1.2;
   partMasterControls.update();
 }
 
@@ -742,15 +744,17 @@ function renderAll() {
     // ── Full mode: one camera per cell, synchronized orbit ──
     if (cells.length > 0) {
       const master = activeCellFull || cells[0];
-      master.fullControls.update();
+      master.fullControls.update();  // only master updates its own damping
       const relPos       = master.fullCamera.position.clone().sub(master.fullControls.target);
       const masterTarget = master.fullControls.target.clone();
+      const masterQuat   = master.fullCamera.quaternion.clone();
       for (const c of cells) {
         if (c === master) continue;
+        // Mirror master state directly — do NOT call c.fullControls.update()
+        // (that would apply independent damping and fight the sync)
         c.fullControls.target.copy(masterTarget);
         c.fullCamera.position.copy(masterTarget).add(relPos);
-        c.fullCamera.quaternion.copy(master.fullCamera.quaternion);
-        c.fullControls.update();
+        c.fullCamera.quaternion.copy(masterQuat);
       }
     }
     for (const c of cells) {
@@ -770,10 +774,14 @@ function renderAll() {
     if (!partMasterControls || cells.length === 0) return;
     partMasterControls.update();
 
-    // Copy master orientation to every part camera across every cell
-    const masterPos    = partMasterCamera.position.clone();
-    const masterQuat   = partMasterCamera.quaternion.clone();
+    // Master direction unit vector and current zoom distance
     const masterTarget = partMasterControls.target.clone();
+    const masterOffset = partMasterCamera.position.clone().sub(masterTarget);
+    const masterDir    = masterOffset.clone().normalize();
+    const masterQuat   = partMasterCamera.quaternion.clone();
+    // Zoom ratio: how far the user has zoomed relative to the default distance
+    const masterDefaultDist = globalBBox.getSize(new THREE.Vector3()).length() * 1.2;
+    const zoomRatio = masterOffset.length() / masterDefaultDist;
 
     const N = parts.length;
     for (const c of cells) {
@@ -790,8 +798,6 @@ function renderAll() {
         const row = Math.floor(pi / cols);
         const col = pi % cols;
 
-        // Each part camera is framed on its own part's bbox center,
-        // but rotated/orbited identically to the master.
         const partCenter = (pc.bbox && !pc.bbox.isEmpty())
           ? pc.bbox.getCenter(new THREE.Vector3())
           : globalBBox.getCenter(new THREE.Vector3());
@@ -799,12 +805,9 @@ function renderAll() {
           ? pc.bbox.getSize(new THREE.Vector3()).length()
           : globalBBox.getSize(new THREE.Vector3()).length();
 
-        // Compute offset of master camera from its target, then apply to part center
-        const offset = masterPos.clone().sub(masterTarget);
-        // Scale offset so the part fills the sub-cell nicely
-        const masterDist = offset.length();
-        const scaledOffset = offset.clone().normalize().multiplyScalar(partSize * 1.2);
-        pc.camera.position.copy(partCenter).add(scaledOffset);
+        // Apply same direction + zoom ratio, scaled to this part's natural distance
+        const dist = partSize * 1.2 * zoomRatio;
+        pc.camera.position.copy(partCenter).addScaledVector(masterDir, dist);
         pc.camera.quaternion.copy(masterQuat);
 
         // DOM sub-cell → WebGL viewport
