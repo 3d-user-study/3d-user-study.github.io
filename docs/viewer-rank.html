@@ -612,13 +612,10 @@ function initPartMasterControls() {
   partMasterCamera.position.set(center.x, center.y, center.z + size * 1.2);
   partMasterCamera.lookAt(center);
 
-  // Invisible full-screen dummy element that collects pointer events in Part mode
-  partMasterDummy = document.createElement('div');
-  partMasterDummy.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10;display:none;cursor:grab;';
-  document.body.appendChild(partMasterDummy);
-  partMasterDummy.addEventListener('mousedown', () => { partMasterDummy.style.cursor = 'grabbing'; });
-  partMasterDummy.addEventListener('mouseup',   () => { partMasterDummy.style.cursor = 'grab'; });
-
+  // Use the #grid element as the drag target — it covers only the mesh area,
+  // so the prompt panel and instruction bar remain fully clickable.
+  partMasterDummy = gridEl;
+  // Show grab cursor on the grid when in Part mode (restored in applyMode)
   partMasterControls = new OrbitControls(partMasterCamera, partMasterDummy);
   partMasterControls.target.copy(center);
   partMasterControls.enableDamping = true;
@@ -648,8 +645,10 @@ function layoutPartOverlays() {
 // ── Show/hide overlays and dividers based on mode ──
 function applyMode() {
   const N = parts.length;
-  // Toggle master dummy overlay
-  if (partMasterDummy) partMasterDummy.style.display = showParts ? 'block' : 'none';
+  // In Part mode the grid itself is the drag target; just set cursor
+  if (partMasterDummy) {
+    partMasterDummy.style.cursor = showParts ? 'grab' : '';
+  }
 
   for (const cell of cells) {
     cell.fullOverlayEl.style.display = showParts ? 'none' : 'block';
