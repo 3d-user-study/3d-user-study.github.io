@@ -80,11 +80,11 @@ body {
 .cell-overlay:active { cursor: grabbing; }
 /* Part-mode sub-overlays — positioned by JS */
 .part-overlay {
-  position: absolute; left: 0; width: 100%;
+  position: absolute;
   cursor: grab;
 }
 .part-overlay:active { cursor: grabbing; }
-/* Part label inside sub-strip */
+/* Part label inside sub-cell */
 .part-sub-label {
   position: absolute; bottom: 4px; left: 0; right: 0;
   text-align: center; font-size: 10px; color: rgba(255,255,255,0.7);
@@ -104,12 +104,16 @@ body {
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   z-index: 2;
 }
-/* Divider lines between part sub-strips */
-.part-divider {
+/* Divider lines between part sub-cells */
+.part-divider-h {
   position: absolute; left: 0; right: 0; height: 1px;
   background: rgba(255,255,255,0.15);
-  pointer-events: none;
-  z-index: 3;
+  pointer-events: none; z-index: 3;
+}
+.part-divider-v {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: rgba(255,255,255,0.15);
+  pointer-events: none; z-index: 3;
 }
 
 #status {
@@ -326,12 +330,33 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 const statusEl = document.getElementById('status');
-// cells[i] = { scene, camera, controls, cellEl, fullGroup, partCameras, slotName }
-// partCameras[j] = { camera, controls, partGroup, bbox, overlayEl, labelEl }
+// cells[i] = { scene, fullCamera, fullControls, fullOverlayEl, cellEl, meshGroup, partCameras, slotName }
+// partCameras[j] = { camera, partScene, partGroup, bbox, overlayEl, labelEl }
+// In Part mode all part cameras share one OrbitControls on a hidden dummy element.
 let cells = [];
-let activeCell = null;      // { cell, partIdx } — partIdx=-1 means full-mode camera
+let activeCellFull = null;   // cell being dragged in Full mode
+// Shared part-mode orbit state — one dummy OrbitControls drives all part cameras
+let partMasterCamera = null;
+let partMasterControls = null;
+let partMasterDummy = null;  // invisible DOM element that receives pointer events for the master
 let globalBBox = null;
 const ambientIntensity = 0.8;
+
+// ── Compute grid layout (rows × cols) as close to square as possible ──
+function partGridLayout(N, cellW, cellH) {
+  if (N <= 0) return { rows: 1, cols: 1 };
+  const aspect = cellW / cellH;  // cell width/height ratio
+  // Find cols that minimises |subW/subH - 1| (squareness)
+  let bestCols = 1, bestScore = Infinity;
+  for (let c = 1; c <= N; c++) {
+    const r = Math.ceil(N / c);
+    const subW = cellW / c;
+    const subH = cellH / r;
+    const score = Math.abs(subW / subH - 1);
+    if (score < bestScore) { bestScore = score; bestCols = c; }
+  }
+  return { rows: Math.ceil(N / bestCols), cols: bestCols };
+}
 
 function computeSmoothNormals(geometry) {
   const pos = geometry.attributes.position;
@@ -526,13 +551,11 @@ function makeCameraForBBox(bbox) {
 
 function createCell(meshGroup, cellEl, slotName) {
   const scene = createScene();
-
-  // Full-mode: original mesh visible
   meshGroup.visible = true;
   scene.add(meshGroup);
 
-  // Full-mode camera
-  const { camera: fullCamera, center: fullCenter, size: fullSize } = makeCameraForBBox(globalBBox);
+  // Full-mode camera + controls
+  const { camera: fullCamera, center: fullCenter } = makeCameraForBBox(globalBBox);
   const fullOverlayEl = cellEl.querySelector('.cell-overlay');
   const fullControls = new OrbitControls(fullCamera, fullOverlayEl);
   fullControls.target.copy(fullCenter);
@@ -540,7 +563,10 @@ function createCell(meshGroup, cellEl, slotName) {
   fullControls.dampingFactor = 0.1;
   fullControls.update();
 
-  // Per-part cameras — one scene per part (each part is isolated)
+  fullOverlayEl.addEventListener('pointerdown', () => { activeCellFull = cellObj; });
+
+  // Per-part cameras — each has its own scene; NO per-part OrbitControls
+  // (all part cameras are driven by the shared partMasterControls)
   const partCameras = [];
   for (let pi = 0; pi < parts.length; pi++) {
     const p = parts[pi];
@@ -548,107 +574,120 @@ function createCell(meshGroup, cellEl, slotName) {
     if (!partGroupHasMesh(partGroup)) {
       fail(`No mesh faces extracted for part "${p.label}" in panel ${slotName}`);
     }
-
-    // Each part gets its own scene so cameras are independent
     const partScene = createScene();
     partScene.add(partGroup);
 
     const partBBox = bboxOfGroup(partGroup);
-    const { camera: partCamera, center: partCenter, size: partSize } = makeCameraForBBox(
+    const { camera: partCamera } = makeCameraForBBox(
       partBBox.isEmpty() ? globalBBox : partBBox
     );
 
-    // Overlay div for this sub-strip (positioned by layoutPartOverlays)
+    // Overlay div — positioned by layoutPartOverlays; forwards pointer to master
     const overlayEl = document.createElement('div');
     overlayEl.className = 'part-overlay';
     overlayEl.style.display = 'none';
     cellEl.appendChild(overlayEl);
 
-    // Part label inside sub-strip
     const labelEl = document.createElement('div');
     labelEl.className = 'part-sub-label';
     labelEl.textContent = p.label;
     labelEl.style.display = 'none';
     overlayEl.appendChild(labelEl);
 
-    const partControls = new OrbitControls(partCamera, overlayEl);
-    partControls.target.copy(partCenter);
-    partControls.enableDamping = true;
-    partControls.dampingFactor = 0.1;
-    partControls.update();
-
-    const pcEntry = { camera: partCamera, controls: partControls, partScene, partGroup, bbox: partBBox, overlayEl, labelEl, label: p.label };
-    partCameras.push(pcEntry);
-
-    overlayEl.addEventListener('pointerdown', () => {
-      activeCell = { cell: cellObj, partIdx: pi };
-    });
+    partCameras.push({ camera: partCamera, partScene, partGroup, bbox: partBBox, overlayEl, labelEl, label: p.label });
   }
 
   const cellObj = { scene, fullCamera, fullControls, fullOverlayEl, cellEl, meshGroup, partCameras, slotName };
-
-  fullOverlayEl.addEventListener('pointerdown', () => {
-    activeCell = { cell: cellObj, partIdx: -1 };
-  });
-
   cells.push(cellObj);
   return cellObj;
 }
 
-// ── Layout part sub-strip overlays within each cell ──
+// ── Create shared part-mode master OrbitControls (called once after all panels load) ──
+function initPartMasterControls() {
+  // Use globalBBox center as the shared orbit target
+  const center = globalBBox.getCenter(new THREE.Vector3());
+  const size   = globalBBox.getSize(new THREE.Vector3()).length();
+
+  partMasterCamera = new THREE.PerspectiveCamera(45, 1, 0.001, 1000);
+  partMasterCamera.position.set(center.x, center.y, center.z + size * 1.2);
+  partMasterCamera.lookAt(center);
+
+  // Invisible full-screen dummy element that collects pointer events in Part mode
+  partMasterDummy = document.createElement('div');
+  partMasterDummy.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:10;display:none;cursor:grab;';
+  document.body.appendChild(partMasterDummy);
+  partMasterDummy.addEventListener('mousedown', () => { partMasterDummy.style.cursor = 'grabbing'; });
+  partMasterDummy.addEventListener('mouseup',   () => { partMasterDummy.style.cursor = 'grab'; });
+
+  partMasterControls = new OrbitControls(partMasterCamera, partMasterDummy);
+  partMasterControls.target.copy(center);
+  partMasterControls.enableDamping = true;
+  partMasterControls.dampingFactor = 0.1;
+  partMasterControls.update();
+}
+
+// ── Layout part sub-cell overlays within each cell (grid, as-square-as-possible) ──
 function layoutPartOverlays() {
   const N = parts.length;
+  if (N === 0 || cells.length === 0) return;
+  const cellRect = cells[0].cellEl.getBoundingClientRect();
+  const { rows, cols } = partGridLayout(N, cellRect.width || 1, cellRect.height || 1);
   for (const cell of cells) {
-    const cellH = cell.cellEl.getBoundingClientRect().height;
-    const stripH = cellH / N;
     for (let pi = 0; pi < N; pi++) {
       const pc = cell.partCameras[pi];
-      const topPct = (pi / N * 100).toFixed(4) + '%';
-      const heightPct = (100 / N).toFixed(4) + '%';
-      pc.overlayEl.style.top = topPct;
-      pc.overlayEl.style.height = heightPct;
+      const row = Math.floor(pi / cols);
+      const col = pi % cols;
+      pc.overlayEl.style.left   = (col / cols * 100).toFixed(4) + '%';
+      pc.overlayEl.style.top    = (row / rows * 100).toFixed(4) + '%';
+      pc.overlayEl.style.width  = (100 / cols).toFixed(4) + '%';
+      pc.overlayEl.style.height = (100 / rows).toFixed(4) + '%';
     }
   }
 }
 
-// ── Show/hide overlays based on mode ──
+// ── Show/hide overlays and dividers based on mode ──
 function applyMode() {
+  const N = parts.length;
+  // Toggle master dummy overlay
+  if (partMasterDummy) partMasterDummy.style.display = showParts ? 'block' : 'none';
+
   for (const cell of cells) {
-    const inPartMode = showParts;
-    // Full overlay
-    cell.fullOverlayEl.style.display = inPartMode ? 'none' : 'block';
-    // Part overlays
+    cell.fullOverlayEl.style.display = showParts ? 'none' : 'block';
     for (const pc of cell.partCameras) {
-      pc.overlayEl.style.display = inPartMode ? 'block' : 'none';
-      pc.labelEl.style.display   = inPartMode ? 'block' : 'none';
+      // Overlays are visual-only (pointer events go to partMasterDummy)
+      pc.overlayEl.style.display    = showParts ? 'block' : 'none';
+      pc.overlayEl.style.pointerEvents = 'none';
+      pc.labelEl.style.display      = showParts ? 'block' : 'none';
     }
-    // Dividers
-    const existing = cell.cellEl.querySelectorAll('.part-divider');
-    existing.forEach(d => d.remove());
-    if (inPartMode) {
-      const N = parts.length;
-      for (let pi = 1; pi < N; pi++) {
-        const div = document.createElement('div');
-        div.className = 'part-divider';
-        div.style.top = (pi / N * 100).toFixed(4) + '%';
-        cell.cellEl.appendChild(div);
+    // Remove old dividers
+    cell.cellEl.querySelectorAll('.part-divider-h,.part-divider-v').forEach(d => d.remove());
+    if (showParts) {
+      const cellRect = cell.cellEl.getBoundingClientRect();
+      const { rows, cols } = partGridLayout(N, cellRect.width || 1, cellRect.height || 1);
+      for (let r = 1; r < rows; r++) {
+        const d = document.createElement('div');
+        d.className = 'part-divider-h';
+        d.style.top = (r / rows * 100).toFixed(4) + '%';
+        cell.cellEl.appendChild(d);
       }
-      layoutPartOverlays();
+      for (let c = 1; c < cols; c++) {
+        const d = document.createElement('div');
+        d.className = 'part-divider-v';
+        d.style.left = (c / cols * 100).toFixed(4) + '%';
+        cell.cellEl.appendChild(d);
+      }
     }
   }
-  // Sync all part-camera orbits to match current full-camera orientation
-  if (showParts && cells.length > 0) {
-    for (const cell of cells) {
-      for (const pc of cell.partCameras) {
-        // Reset to default framing for this part
-        const bbox = pc.bbox.isEmpty() ? globalBBox : pc.bbox;
-        const center = bbox.getCenter(new THREE.Vector3());
-        const size   = bbox.getSize(new THREE.Vector3()).length();
-        pc.controls.target.copy(center);
-        pc.camera.position.set(center.x, center.y, center.z + size * 1.2);
-        pc.camera.lookAt(center);
-        pc.controls.update();
-      }
+  if (showParts) {
+    layoutPartOverlays();
+    // Reset master camera to default framing
+    if (partMasterControls && globalBBox) {
+      const center = globalBBox.getCenter(new THREE.Vector3());
+      const size   = globalBBox.getSize(new THREE.Vector3()).length();
+      partMasterControls.target.copy(center);
+      partMasterCamera.position.set(center.x, center.y, center.z + size * 1.2);
+      partMasterCamera.lookAt(center);
+      partMasterControls.update();
     }
   }
 }
@@ -673,7 +712,10 @@ async function loadAllPanels() {
     createCell(meshGroup, cellEl, slot);
     statusEl.textContent = `Loaded ${cells.length}/6 panels`;
   }
-  if (cells.length) activeCell = { cell: cells[0], partIdx: -1 };
+  if (cells.length) {
+    activeCellFull = cells[0];
+    initPartMasterControls();
+  }
 }
 
 function renderAll() {
@@ -692,25 +734,23 @@ function renderAll() {
   if (!showParts) {
     // ── Full mode: one camera per cell, synchronized orbit ──
     if (cells.length > 0) {
-      const masterCell = (activeCell && activeCell.partIdx === -1) ? activeCell.cell : cells[0];
-      masterCell.fullControls.update();
-      const relPos       = masterCell.fullCamera.position.clone().sub(masterCell.fullControls.target);
-      const masterTarget = masterCell.fullControls.target.clone();
+      const master = activeCellFull || cells[0];
+      master.fullControls.update();
+      const relPos       = master.fullCamera.position.clone().sub(master.fullControls.target);
+      const masterTarget = master.fullControls.target.clone();
       for (const c of cells) {
-        if (c === masterCell) continue;
+        if (c === master) continue;
         c.fullControls.target.copy(masterTarget);
         c.fullCamera.position.copy(masterTarget).add(relPos);
-        c.fullCamera.quaternion.copy(masterCell.fullCamera.quaternion);
+        c.fullCamera.quaternion.copy(master.fullCamera.quaternion);
         c.fullControls.update();
       }
     }
-
     for (const c of cells) {
       const rect = c.cellEl.getBoundingClientRect();
       if (rect.bottom < 0 || rect.top > H || rect.right < 0 || rect.left > W) continue;
       if (rect.width <= 0 || rect.height <= 0) continue;
-      const x = rect.left,   y = H - rect.bottom;
-      const w = rect.width,  h = rect.height;
+      const x = rect.left, y = H - rect.bottom, w = rect.width, h = rect.height;
       renderer.setViewport(x, y, w, h);
       renderer.setScissor(x, y, w, h);
       c.fullCamera.aspect = w / h;
@@ -719,31 +759,14 @@ function renderAll() {
     }
 
   } else {
-    // ── Part mode: N sub-strips per cell, each with its own camera ──
-    // Synchronize: all cells' part[pi] cameras follow the master for that part index
-    const masterCell = (activeCell && activeCell.partIdx >= 0) ? activeCell.cell : (cells[0] || null);
-    const masterPartIdx = (activeCell && activeCell.partIdx >= 0) ? activeCell.partIdx : -1;
+    // ── Part mode: grid of sub-cells per panel, ALL cameras share one orbit ──
+    if (!partMasterControls || cells.length === 0) return;
+    partMasterControls.update();
 
-    if (masterCell && masterPartIdx >= 0) {
-      const masterPc = masterCell.partCameras[masterPartIdx];
-      masterPc.controls.update();
-      const relPos       = masterPc.camera.position.clone().sub(masterPc.controls.target);
-      const masterTarget = masterPc.controls.target.clone();
-      // Sync same part index across all cells
-      for (const c of cells) {
-        const pc = c.partCameras[masterPartIdx];
-        if (!pc || pc === masterPc) continue;
-        pc.controls.target.copy(masterTarget);
-        pc.camera.position.copy(masterTarget).add(relPos);
-        pc.camera.quaternion.copy(masterPc.camera.quaternion);
-        pc.controls.update();
-      }
-    } else {
-      // No active drag — just update all controls
-      for (const c of cells) {
-        for (const pc of c.partCameras) pc.controls.update();
-      }
-    }
+    // Copy master orientation to every part camera across every cell
+    const masterPos    = partMasterCamera.position.clone();
+    const masterQuat   = partMasterCamera.quaternion.clone();
+    const masterTarget = partMasterControls.target.clone();
 
     const N = parts.length;
     for (const c of cells) {
@@ -751,16 +774,39 @@ function renderAll() {
       if (cellRect.bottom < 0 || cellRect.top > H || cellRect.right < 0 || cellRect.left > W) continue;
       if (cellRect.width <= 0 || cellRect.height <= 0) continue;
 
-      const stripH = cellRect.height / N;
+      const { rows, cols } = partGridLayout(N, cellRect.width, cellRect.height);
+      const subW = cellRect.width  / cols;
+      const subH = cellRect.height / rows;
+
       for (let pi = 0; pi < N; pi++) {
         const pc = c.partCameras[pi];
-        // Sub-strip rect (top-to-bottom in DOM = bottom-to-top in WebGL)
-        const x = cellRect.left;
-        const w = cellRect.width;
-        const h = stripH;
-        // pi=0 is top strip in DOM → highest y in screen → lowest y in WebGL coords
-        const domTop = cellRect.top + pi * stripH;
-        const y = H - (domTop + h);
+        const row = Math.floor(pi / cols);
+        const col = pi % cols;
+
+        // Each part camera is framed on its own part's bbox center,
+        // but rotated/orbited identically to the master.
+        const partCenter = (pc.bbox && !pc.bbox.isEmpty())
+          ? pc.bbox.getCenter(new THREE.Vector3())
+          : globalBBox.getCenter(new THREE.Vector3());
+        const partSize = (pc.bbox && !pc.bbox.isEmpty())
+          ? pc.bbox.getSize(new THREE.Vector3()).length()
+          : globalBBox.getSize(new THREE.Vector3()).length();
+
+        // Compute offset of master camera from its target, then apply to part center
+        const offset = masterPos.clone().sub(masterTarget);
+        // Scale offset so the part fills the sub-cell nicely
+        const masterDist = offset.length();
+        const scaledOffset = offset.clone().normalize().multiplyScalar(partSize * 1.2);
+        pc.camera.position.copy(partCenter).add(scaledOffset);
+        pc.camera.quaternion.copy(masterQuat);
+
+        // DOM sub-cell → WebGL viewport
+        const domLeft = cellRect.left + col * subW;
+        const domTop  = cellRect.top  + row * subH;
+        const x = domLeft;
+        const y = H - (domTop + subH);
+        const w = subW;
+        const h = subH;
 
         renderer.setViewport(x, y, w, h);
         renderer.setScissor(x, y, w, h);
