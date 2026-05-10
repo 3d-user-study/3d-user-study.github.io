@@ -34,10 +34,23 @@ body {
   font-size: 12px; color: #bbb; line-height: 1.4;
   margin: 2px 0 0 0; list-style: none;
 }
-#prompt-parts li { margin-left: 0; padding-left: 12px; position: relative; }
-#prompt-parts li::before {
-  content: '•'; position: absolute; left: 0; color: #666;
+#prompt-parts li { margin-left: 0; }
+.part-toggle-label {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 2px 0; cursor: pointer;
 }
+.part-toggle {
+  flex: 0 0 auto; width: 13px; height: 13px; margin-top: 2px;
+  accent-color: #2a64d6; cursor: pointer;
+}
+.part-toggle:focus-visible { outline: 2px solid #cfe1ff; outline-offset: 2px; }
+.part-toggle-text { display: block; }
+.part-toggle-text b { color: #eee; }
+.part-full-label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 2px 0; cursor: pointer; font-size: 12px; color: #bbb;
+}
+.part-full-label b { color: #eee; }
 
 #instruction {
   background: #1f3a5f; color: #cfe1ff; font-size: 12px;
@@ -59,11 +72,26 @@ body {
   background: transparent;
   overflow: hidden;
 }
+/* Full-mode single overlay */
 .cell-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   cursor: grab;
 }
 .cell-overlay:active { cursor: grabbing; }
+/* Part-mode sub-overlays — positioned by JS */
+.part-overlay {
+  position: absolute; left: 0; width: 100%;
+  cursor: grab;
+}
+.part-overlay:active { cursor: grabbing; }
+/* Part label inside sub-strip */
+.part-sub-label {
+  position: absolute; bottom: 4px; left: 0; right: 0;
+  text-align: center; font-size: 10px; color: rgba(255,255,255,0.7);
+  pointer-events: none; user-select: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 0 4px;
+}
 .cell-label {
   position: absolute; top: 8px; left: 8px;
   width: 32px; height: 32px;
@@ -75,6 +103,13 @@ body {
   user-select: none;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   z-index: 2;
+}
+/* Divider lines between part sub-strips */
+.part-divider {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: rgba(255,255,255,0.15);
+  pointer-events: none;
+  z-index: 3;
 }
 
 #status {
@@ -97,7 +132,7 @@ body {
     <div id="prompt-full">Loading…</div>
     <ul id="prompt-parts"></ul>
   </div>
-  <div id="instruction">Inspect all six textured meshes (<b>A</b>–<b>F</b>) below. Drag any mesh to rotate; all six views stay synchronized. Use the rank chips beneath this viewer to rank from BEST to WORST.</div>
+  <div id="instruction">Inspect all six textured meshes (<b>A</b>–<b>F</b>) below. Use the <b>Full</b> / <b>Part</b> radio buttons above to toggle between the complete mesh and per-part sub-views; drag any mesh to rotate and all six views stay synchronized. Use the rank chips beneath this viewer to rank from BEST to WORST.</div>
   <div id="grid"></div>
 </div>
 
@@ -164,22 +199,108 @@ for (const s of trial.slots) {
 }
 if (slotsSeen.size !== 6) fail('Missing slot');
 
-// ── Render prompt header ──
-const promptFull = trial.prompt.FULL;
-const parts = trial.prompt.parts;
-document.getElementById('prompt-full').textContent = promptFull;
-const partsUl = document.getElementById('prompt-parts');
-partsUl.innerHTML = '';
-for (const p of parts) {
-  if (!p || typeof p.label !== 'string' || typeof p.caption !== 'string') continue;
-  const li = document.createElement('li');
-  li.innerHTML = `<b>${escapeHtml(p.label)}:</b> ${escapeHtml(p.caption)}`;
-  partsUl.appendChild(li);
+const sample = trial.slots[0].dir.split('/')[0];
+for (const s of trial.slots) {
+  if (s.dir.split('/')[0] !== sample) fail('Slots span multiple samples');
 }
+
+const promptFull = trial.prompt.FULL;
+const parts = [];
+const partLabels = new Set();
+for (const p of trial.prompt.parts) {
+  if (!p || typeof p.label !== 'string' || typeof p.caption !== 'string') {
+    fail('Invalid prompt part entry');
+  }
+  if (partLabels.has(p.label)) fail('Duplicate prompt part: ' + p.label);
+  partLabels.add(p.label);
+  parts.push(p);
+}
+
+async function loadClassFaceMap(sampleName) {
+  const url = `data/${sampleName}/class_faces_gt.json`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    fail(`Missing required part face map for ${sampleName}: ${url}`);
+  }
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    fail(`Invalid part face map JSON for ${sampleName}`);
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    fail(`Invalid part face map for ${sampleName}`);
+  }
+  for (const p of parts) {
+    const faces = data[p.label];
+    if (!Array.isArray(faces)) {
+      fail(`Missing face list for part "${p.label}" in ${sampleName}`);
+    }
+    if (faces.length === 0 || !faces.every(n => Number.isInteger(n) && n >= 0)) {
+      fail(`Invalid face list for part "${p.label}" in ${sampleName}`);
+    }
+  }
+  return data;
+}
+
+const classFaceMap = await loadClassFaceMap(sample);
+// false = Full mode; true = Part mode (per-part sub-cameras)
+let showParts = false;
+
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Render prompt header ──
+document.getElementById('prompt-full').textContent = promptFull;
+const partsUl = document.getElementById('prompt-parts');
+partsUl.innerHTML = '';
+
+// Build radio row helper
+function makeRadioItem(value, labelClass, labelHTML, defaultChecked, onChange) {
+  const li = document.createElement('li');
+  const lbl = document.createElement('label');
+  lbl.className = labelClass;
+  const radio = document.createElement('input');
+  radio.type = 'radio';
+  radio.name = 'part-select';
+  radio.className = 'part-toggle';
+  radio.value = value;
+  radio.checked = defaultChecked;
+  radio.setAttribute('aria-label', labelHTML.replace(/<[^>]+>/g, ''));
+  radio.addEventListener('change', () => { if (radio.checked) onChange(); });
+  const text = document.createElement('span');
+  text.innerHTML = labelHTML;
+  lbl.appendChild(radio);
+  lbl.appendChild(text);
+  li.appendChild(lbl);
+  return li;
+}
+
+// "Full" radio — default selected
+partsUl.appendChild(makeRadioItem('full', 'part-full-label', '<b>Full</b>', true, () => {
+  showParts = false; applyMode();
+}));
+
+// "Part" radio — splits each cell into per-part sub-cameras
+{
+  const partLi = makeRadioItem('parts', 'part-full-label', '<b>Part</b>', false, () => {
+    showParts = true; applyMode();
+  });
+  partsUl.appendChild(partLi);
+
+  // Part-by-part prompts indented below the Part radio
+  const subUl = document.createElement('ul');
+  subUl.style.cssText = 'list-style:none; margin: 2px 0 0 22px; padding: 0;';
+  for (const p of parts) {
+    const subLi = document.createElement('li');
+    subLi.style.cssText = 'padding: 1px 0; font-size: 11px; color: #aaa;';
+    subLi.innerHTML = `<b style="color:#ddd">${escapeHtml(p.label)}:</b> ${escapeHtml(p.caption)}`;
+    subUl.appendChild(subLi);
+  }
+  partsUl.appendChild(subUl);
 }
 
 // ── Render 3x2 grid cells in server slot order (A..F) ──
@@ -205,8 +326,10 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 const statusEl = document.getElementById('status');
+// cells[i] = { scene, camera, controls, cellEl, fullGroup, partCameras, slotName }
+// partCameras[j] = { camera, controls, partGroup, bbox, overlayEl, labelEl }
 let cells = [];
-let activeCell = null;
+let activeCell = null;      // { cell, partIdx } — partIdx=-1 means full-mode camera
 let globalBBox = null;
 const ambientIntensity = 0.8;
 
@@ -279,6 +402,110 @@ async function loadMesh(objPath, mtlPath) {
   return group;
 }
 
+function cloneMeshMaterial(material) {
+  if (Array.isArray(material)) return material.map(m => m ? m.clone() : m);
+  return material ? material.clone() : new THREE.MeshStandardMaterial({ color: 0xcccccc, side: THREE.DoubleSide });
+}
+
+function setDoubleSide(material) {
+  if (Array.isArray(material)) {
+    for (const m of material) if (m) m.side = THREE.DoubleSide;
+  } else if (material) {
+    material.side = THREE.DoubleSide;
+  }
+}
+
+function extractPart(originalGroup, faceIndices) {
+  const group = new THREE.Group();
+  const faceSet = new Set(faceIndices);
+  let offset = 0;
+
+  originalGroup.updateMatrixWorld(true);
+  originalGroup.traverse(child => {
+    if (!child.isMesh) return;
+    const geometry = child.geometry;
+    const isIndexed = geometry.index !== null;
+    const faceCount = isIndexed
+      ? Math.floor(geometry.index.count / 3)
+      : Math.floor(geometry.attributes.position.count / 3);
+
+    if (isIndexed) {
+      const originalIndex = geometry.index.array;
+      const nextIndex = [];
+      for (let face = 0; face < faceCount; face++) {
+        if (!faceSet.has(face + offset)) continue;
+        const base = face * 3;
+        nextIndex.push(originalIndex[base], originalIndex[base + 1], originalIndex[base + 2]);
+      }
+      if (nextIndex.length) {
+        const nextGeometry = geometry.clone();
+        nextGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(nextIndex), 1));
+        nextGeometry.computeVertexNormals();
+        const material = cloneMeshMaterial(child.material);
+        setDoubleSide(material);
+        const mesh = new THREE.Mesh(nextGeometry, material);
+        mesh.matrixAutoUpdate = false;
+        mesh.matrix.copy(child.matrixWorld);
+        group.add(mesh);
+      }
+    } else {
+      const positions = geometry.attributes.position;
+      const uvs = geometry.attributes.uv;
+      const selectedFaces = [];
+      for (let face = 0; face < faceCount; face++) {
+        if (faceSet.has(face + offset)) selectedFaces.push(face);
+      }
+      if (selectedFaces.length) {
+        const vertexCount = selectedFaces.length * 3;
+        const nextPositions = new Float32Array(vertexCount * 3);
+        const nextUvs = uvs ? new Float32Array(vertexCount * 2) : null;
+        for (let i = 0; i < selectedFaces.length; i++) {
+          const face = selectedFaces[i];
+          for (let vertex = 0; vertex < 3; vertex++) {
+            const src = face * 3 + vertex;
+            const dst = i * 3 + vertex;
+            nextPositions[dst * 3] = positions.array[src * 3];
+            nextPositions[dst * 3 + 1] = positions.array[src * 3 + 1];
+            nextPositions[dst * 3 + 2] = positions.array[src * 3 + 2];
+            if (nextUvs) {
+              nextUvs[dst * 2] = uvs.array[src * 2];
+              nextUvs[dst * 2 + 1] = uvs.array[src * 2 + 1];
+            }
+          }
+        }
+        const nextGeometry = new THREE.BufferGeometry();
+        nextGeometry.setAttribute('position', new THREE.BufferAttribute(nextPositions, 3));
+        if (nextUvs) nextGeometry.setAttribute('uv', new THREE.BufferAttribute(nextUvs, 2));
+        computeSmoothNormals(nextGeometry);
+        const material = cloneMeshMaterial(child.material);
+        setDoubleSide(material);
+        const mesh = new THREE.Mesh(nextGeometry, material);
+        mesh.matrixAutoUpdate = false;
+        mesh.matrix.copy(child.matrixWorld);
+        group.add(mesh);
+      }
+    }
+    offset += faceCount;
+  });
+
+  return group;
+}
+
+function partGroupHasMesh(group) {
+  let hasMesh = false;
+  group.traverse(child => { if (child.isMesh) hasMesh = true; });
+  return hasMesh;
+}
+
+function bboxOfGroup(group) {
+  // Temporarily make visible to compute bbox
+  const wasVisible = group.visible;
+  group.visible = true;
+  const bbox = new THREE.Box3().setFromObject(group);
+  group.visible = wasVisible;
+  return bbox;
+}
+
 function createScene() {
   const scene = new THREE.Scene();
   scene.add(new THREE.HemisphereLight(0x87CEEB, 0x362e1e, ambientIntensity));
@@ -288,30 +515,142 @@ function createScene() {
   return scene;
 }
 
-function createCell(meshGroup, cellEl, slotName) {
-  const scene = createScene();
-  scene.add(meshGroup);
-
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
-  const center = globalBBox.getCenter(new THREE.Vector3());
-  const size   = globalBBox.getSize(new THREE.Vector3()).length();
+function makeCameraForBBox(bbox) {
+  const center = bbox.getCenter(new THREE.Vector3());
+  const size   = bbox.getSize(new THREE.Vector3()).length();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.001, 1000);
   camera.position.set(center.x, center.y, center.z + size * 1.2);
   camera.lookAt(center);
+  return { camera, center, size };
+}
 
-  const controlEl = cellEl.querySelector('.cell-overlay');
+function createCell(meshGroup, cellEl, slotName) {
+  const scene = createScene();
 
-  const controls = new OrbitControls(camera, controlEl);
-  controls.target.copy(center);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.1;
-  controls.update();
+  // Full-mode: original mesh visible
+  meshGroup.visible = true;
+  scene.add(meshGroup);
 
-  const cell = { scene, camera, controls, cellEl, meshGroup, center, size, slotName };
+  // Full-mode camera
+  const { camera: fullCamera, center: fullCenter, size: fullSize } = makeCameraForBBox(globalBBox);
+  const fullOverlayEl = cellEl.querySelector('.cell-overlay');
+  const fullControls = new OrbitControls(fullCamera, fullOverlayEl);
+  fullControls.target.copy(fullCenter);
+  fullControls.enableDamping = true;
+  fullControls.dampingFactor = 0.1;
+  fullControls.update();
 
-  controlEl.addEventListener('pointerdown', () => { activeCell = cell; });
+  // Per-part cameras — one scene per part (each part is isolated)
+  const partCameras = [];
+  for (let pi = 0; pi < parts.length; pi++) {
+    const p = parts[pi];
+    const partGroup = extractPart(meshGroup, classFaceMap[p.label]);
+    if (!partGroupHasMesh(partGroup)) {
+      fail(`No mesh faces extracted for part "${p.label}" in panel ${slotName}`);
+    }
 
-  cells.push(cell);
-  return cell;
+    // Each part gets its own scene so cameras are independent
+    const partScene = createScene();
+    partScene.add(partGroup);
+
+    const partBBox = bboxOfGroup(partGroup);
+    const { camera: partCamera, center: partCenter, size: partSize } = makeCameraForBBox(
+      partBBox.isEmpty() ? globalBBox : partBBox
+    );
+
+    // Overlay div for this sub-strip (positioned by layoutPartOverlays)
+    const overlayEl = document.createElement('div');
+    overlayEl.className = 'part-overlay';
+    overlayEl.style.display = 'none';
+    cellEl.appendChild(overlayEl);
+
+    // Part label inside sub-strip
+    const labelEl = document.createElement('div');
+    labelEl.className = 'part-sub-label';
+    labelEl.textContent = p.label;
+    labelEl.style.display = 'none';
+    overlayEl.appendChild(labelEl);
+
+    const partControls = new OrbitControls(partCamera, overlayEl);
+    partControls.target.copy(partCenter);
+    partControls.enableDamping = true;
+    partControls.dampingFactor = 0.1;
+    partControls.update();
+
+    const pcEntry = { camera: partCamera, controls: partControls, partScene, partGroup, bbox: partBBox, overlayEl, labelEl, label: p.label };
+    partCameras.push(pcEntry);
+
+    overlayEl.addEventListener('pointerdown', () => {
+      activeCell = { cell: cellObj, partIdx: pi };
+    });
+  }
+
+  const cellObj = { scene, fullCamera, fullControls, fullOverlayEl, cellEl, meshGroup, partCameras, slotName };
+
+  fullOverlayEl.addEventListener('pointerdown', () => {
+    activeCell = { cell: cellObj, partIdx: -1 };
+  });
+
+  cells.push(cellObj);
+  return cellObj;
+}
+
+// ── Layout part sub-strip overlays within each cell ──
+function layoutPartOverlays() {
+  const N = parts.length;
+  for (const cell of cells) {
+    const cellH = cell.cellEl.getBoundingClientRect().height;
+    const stripH = cellH / N;
+    for (let pi = 0; pi < N; pi++) {
+      const pc = cell.partCameras[pi];
+      const topPct = (pi / N * 100).toFixed(4) + '%';
+      const heightPct = (100 / N).toFixed(4) + '%';
+      pc.overlayEl.style.top = topPct;
+      pc.overlayEl.style.height = heightPct;
+    }
+  }
+}
+
+// ── Show/hide overlays based on mode ──
+function applyMode() {
+  for (const cell of cells) {
+    const inPartMode = showParts;
+    // Full overlay
+    cell.fullOverlayEl.style.display = inPartMode ? 'none' : 'block';
+    // Part overlays
+    for (const pc of cell.partCameras) {
+      pc.overlayEl.style.display = inPartMode ? 'block' : 'none';
+      pc.labelEl.style.display   = inPartMode ? 'block' : 'none';
+    }
+    // Dividers
+    const existing = cell.cellEl.querySelectorAll('.part-divider');
+    existing.forEach(d => d.remove());
+    if (inPartMode) {
+      const N = parts.length;
+      for (let pi = 1; pi < N; pi++) {
+        const div = document.createElement('div');
+        div.className = 'part-divider';
+        div.style.top = (pi / N * 100).toFixed(4) + '%';
+        cell.cellEl.appendChild(div);
+      }
+      layoutPartOverlays();
+    }
+  }
+  // Sync all part-camera orbits to match current full-camera orientation
+  if (showParts && cells.length > 0) {
+    for (const cell of cells) {
+      for (const pc of cell.partCameras) {
+        // Reset to default framing for this part
+        const bbox = pc.bbox.isEmpty() ? globalBBox : pc.bbox;
+        const center = bbox.getCenter(new THREE.Vector3());
+        const size   = bbox.getSize(new THREE.Vector3()).length();
+        pc.controls.target.copy(center);
+        pc.camera.position.set(center.x, center.y, center.z + size * 1.2);
+        pc.camera.lookAt(center);
+        pc.controls.update();
+      }
+    }
+  }
 }
 
 const assetUrl = (dir, file) => `data/${dir}/${file}`;
@@ -334,25 +673,11 @@ async function loadAllPanels() {
     createCell(meshGroup, cellEl, slot);
     statusEl.textContent = `Loaded ${cells.length}/6 panels`;
   }
-  if (cells.length) activeCell = cells[0];
+  if (cells.length) activeCell = { cell: cells[0], partIdx: -1 };
 }
 
 function renderAll() {
   requestAnimationFrame(renderAll);
-
-  if (cells.length > 0) {
-    const master = activeCell || cells[0];
-    master.controls.update();
-    const relPos       = master.camera.position.clone().sub(master.controls.target);
-    const masterTarget = master.controls.target.clone();
-    for (const c of cells) {
-      if (c === master) continue;
-      c.controls.target.copy(masterTarget);
-      c.camera.position.copy(masterTarget).add(relPos);
-      c.camera.quaternion.copy(master.camera.quaternion);
-      c.controls.update();
-    }
-  }
 
   const W = window.innerWidth, H = window.innerHeight;
   if (canvas.width !== W * devicePixelRatio || canvas.height !== H * devicePixelRatio) {
@@ -364,19 +689,86 @@ function renderAll() {
   renderer.clear();
   renderer.setScissorTest(true);
 
-  for (const c of cells) {
-    const rect = c.cellEl.getBoundingClientRect();
-    if (rect.bottom < 0 || rect.top > H || rect.right < 0 || rect.left > W) continue;
-    if (rect.width <= 0 || rect.height <= 0) continue;
-    const x = rect.left;
-    const y = H - rect.bottom;
-    const w = rect.width;
-    const h = rect.height;
-    renderer.setViewport(x, y, w, h);
-    renderer.setScissor(x, y, w, h);
-    c.camera.aspect = w / h;
-    c.camera.updateProjectionMatrix();
-    renderer.render(c.scene, c.camera);
+  if (!showParts) {
+    // ── Full mode: one camera per cell, synchronized orbit ──
+    if (cells.length > 0) {
+      const masterCell = (activeCell && activeCell.partIdx === -1) ? activeCell.cell : cells[0];
+      masterCell.fullControls.update();
+      const relPos       = masterCell.fullCamera.position.clone().sub(masterCell.fullControls.target);
+      const masterTarget = masterCell.fullControls.target.clone();
+      for (const c of cells) {
+        if (c === masterCell) continue;
+        c.fullControls.target.copy(masterTarget);
+        c.fullCamera.position.copy(masterTarget).add(relPos);
+        c.fullCamera.quaternion.copy(masterCell.fullCamera.quaternion);
+        c.fullControls.update();
+      }
+    }
+
+    for (const c of cells) {
+      const rect = c.cellEl.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > H || rect.right < 0 || rect.left > W) continue;
+      if (rect.width <= 0 || rect.height <= 0) continue;
+      const x = rect.left,   y = H - rect.bottom;
+      const w = rect.width,  h = rect.height;
+      renderer.setViewport(x, y, w, h);
+      renderer.setScissor(x, y, w, h);
+      c.fullCamera.aspect = w / h;
+      c.fullCamera.updateProjectionMatrix();
+      renderer.render(c.scene, c.fullCamera);
+    }
+
+  } else {
+    // ── Part mode: N sub-strips per cell, each with its own camera ──
+    // Synchronize: all cells' part[pi] cameras follow the master for that part index
+    const masterCell = (activeCell && activeCell.partIdx >= 0) ? activeCell.cell : (cells[0] || null);
+    const masterPartIdx = (activeCell && activeCell.partIdx >= 0) ? activeCell.partIdx : -1;
+
+    if (masterCell && masterPartIdx >= 0) {
+      const masterPc = masterCell.partCameras[masterPartIdx];
+      masterPc.controls.update();
+      const relPos       = masterPc.camera.position.clone().sub(masterPc.controls.target);
+      const masterTarget = masterPc.controls.target.clone();
+      // Sync same part index across all cells
+      for (const c of cells) {
+        const pc = c.partCameras[masterPartIdx];
+        if (!pc || pc === masterPc) continue;
+        pc.controls.target.copy(masterTarget);
+        pc.camera.position.copy(masterTarget).add(relPos);
+        pc.camera.quaternion.copy(masterPc.camera.quaternion);
+        pc.controls.update();
+      }
+    } else {
+      // No active drag — just update all controls
+      for (const c of cells) {
+        for (const pc of c.partCameras) pc.controls.update();
+      }
+    }
+
+    const N = parts.length;
+    for (const c of cells) {
+      const cellRect = c.cellEl.getBoundingClientRect();
+      if (cellRect.bottom < 0 || cellRect.top > H || cellRect.right < 0 || cellRect.left > W) continue;
+      if (cellRect.width <= 0 || cellRect.height <= 0) continue;
+
+      const stripH = cellRect.height / N;
+      for (let pi = 0; pi < N; pi++) {
+        const pc = c.partCameras[pi];
+        // Sub-strip rect (top-to-bottom in DOM = bottom-to-top in WebGL)
+        const x = cellRect.left;
+        const w = cellRect.width;
+        const h = stripH;
+        // pi=0 is top strip in DOM → highest y in screen → lowest y in WebGL coords
+        const domTop = cellRect.top + pi * stripH;
+        const y = H - (domTop + h);
+
+        renderer.setViewport(x, y, w, h);
+        renderer.setScissor(x, y, w, h);
+        pc.camera.aspect = w / h;
+        pc.camera.updateProjectionMatrix();
+        renderer.render(pc.partScene, pc.camera);
+      }
+    }
   }
 }
 

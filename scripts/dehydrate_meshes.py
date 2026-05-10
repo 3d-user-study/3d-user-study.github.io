@@ -8,6 +8,7 @@ RENAME each method directory to an opaque sha256 hash of (sample, method, salt).
 
 Result:
   texture-study/docs/data/{sample}/{hash16}/textured.{obj,mtl,png}
+  texture-study/docs/data/{sample}/class_faces_gt.json
 
 The salt is generated once and stored privately at scripts/.dehydrate_salt
 (gitignored). With the salt, gen_hits.py can deterministically recompute the
@@ -24,6 +25,8 @@ Usage (run from repo root):
 Outputs:
   texture-study/docs/data/{sample}/{hash16}/textured.{obj,mtl,png}
   texture-study/docs/data/{sample}/{corrupt_hash16}/textured.{obj,mtl,png}
+  texture-study/docs/data/{sample}/class_faces_gt.json
+                                                # public part face map
                                                 # vigilance bait: shared OBJ
                                                 # topology + random-noise PNG
                                                 # so the prompted object renders
@@ -50,6 +53,7 @@ DEFAULT_SOURCE = Path("portable_viewer/data")
 DEFAULT_DEST = Path("texture-study/docs/data")
 DEFAULT_MAP = Path("texture-study/scripts/method_hash_map.json")
 HASH_LEN = 16  # 64 bits truncated sha256; collision prob ~5e-15 for 378 cells
+PART_FACE_MAP = "class_faces_gt.json"
 
 # Sentinel hashed identically to real methods (same salt guards corrupt dir
 # name) but flagged separately so gen_hits.py picks it only for vigilance.
@@ -93,7 +97,6 @@ def _build_corrupt_dir(
     sample: str,
     sample_dir: Path,
     dest_dir: Path,
-    mode: str,
 ) -> int:
     donor_dir = sample_dir / CORRUPT_OBJ_DONOR
     if not donor_dir.is_dir():
@@ -192,7 +195,19 @@ def main() -> None:
         corrupt_dest = args.dest / sample / corrupt_h
         n_dirs_planned += 1
         if not args.dry_run:
-            n_files_copied += _build_corrupt_dir(sample, sample_dir, corrupt_dest, args.mode)
+            n_files_copied += _build_corrupt_dir(sample, sample_dir, corrupt_dest)
+
+        src_part_map = sample_dir / PART_FACE_MAP
+        if not src_part_map.is_file():
+            sys.exit(f"FATAL: required part face map missing for {sample}: {src_part_map}")
+        if not args.dry_run:
+            dst_part_map = args.dest / sample / PART_FACE_MAP
+            dst_part_map.parent.mkdir(parents=True, exist_ok=True)
+            if dst_part_map.exists() and dst_part_map.read_bytes() == src_part_map.read_bytes():
+                n_files_skipped += 1
+            else:
+                shutil.copy2(src_part_map, dst_part_map)
+                n_files_copied += 1
 
     args.map.parent.mkdir(parents=True, exist_ok=True)
     if not args.dry_run:
