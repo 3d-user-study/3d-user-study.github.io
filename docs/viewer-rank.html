@@ -63,16 +63,23 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 2px;
-  background: #555;
-  border: 2px solid #555;
+  gap: 0;
+  background: transparent;
   min-height: 0;
 }
 .cell {
   position: relative;
   background: transparent;
   overflow: hidden;
+  /* Right border on cols 1-2, bottom border on row 1 */
+  box-shadow: inset -1px 0 0 #666, inset 0 -1px 0 #666;
 }
+/* Remove right border from last column */
+.cell:nth-child(3n) { box-shadow: inset 0 -1px 0 #666; }
+/* Remove bottom border from last row */
+.cell:nth-child(n+4) { box-shadow: inset -1px 0 0 #666; }
+/* Bottom-right corner cell: no border */
+.cell:nth-child(6) { box-shadow: none; }
 /* Full-mode single overlay */
 .cell-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
