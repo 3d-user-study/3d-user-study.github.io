@@ -37,9 +37,9 @@ ENGLISH_LOCALES: list[dict[str, str]] = [
 
 def main() -> None:
     p = argparse.ArgumentParser()
-    p.add_argument("--title",                       default="Compare 3D mesh textures (~10 min)")
-    p.add_argument("--description",                 default="Look at pairs of 3D textured meshes and pick which one looks better.")
-    p.add_argument("--keywords",                    default="3d, mesh, texture, comparison, image, ranking")
+    p.add_argument("--title",                       default="Rank 3D mesh textures (~10 min, 25 trials)")
+    p.add_argument("--description",                 default="For each trial, drag and rank six 3D textured meshes (A–F) from best to worst by how well their texture matches a written prompt.")
+    p.add_argument("--keywords",                    default="3d, mesh, texture, comparison, ranking, drag-and-drop")
     p.add_argument("--reward",                      required=True, help='USD per HIT as string, e.g. "2.00" or "0.01"')
     p.add_argument("--auto_approve_seconds",        type=int, default=3 * 24 * 3600)
     p.add_argument("--assignment_duration_seconds", type=int, default=60 * 60)

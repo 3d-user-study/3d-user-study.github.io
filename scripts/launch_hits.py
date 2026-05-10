@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Create 240 production HITs (one per H_0001..H_0240) on MTurk.
+"""Create production HITs (one per H_0001..H_NNNN) on MTurk.
 
-Reads `scripts/aliasmap_full.json`, filters out the reserved `H_TUTORIAL`
-entry, and submits each remaining HitId as an ExternalQuestion that
-points at our static-host deployment (GitHub Pages) with `?hitId=<hid>`.
-The MTurk-issued HITId is logged to `scripts/launch_log.csv` so the
-offline reconciler can join MTurk's results CSV back to our internal
-HitId via the `RequesterAnnotation` column.
+For the Plackett-Luce ranking pivot the default count is 36 production HITs
+(set in `gen_hits.py` via `--n_hits=36`); this script enumerates whatever
+keys exist in `scripts/aliasmap_full.json` minus the reserved `H_TUTORIAL`
+entry and launches each as an ExternalQuestion that points at our static-
+host deployment (GitHub Pages) with `?hitId=<hid>`. The MTurk-issued HITId
+is logged to `scripts/launch_log.csv` so the offline reconciler can join
+MTurk's results CSV back to our internal HitId via the `RequesterAnnotation`
+column.
 
 Required env / boto3 config:
   - AWS profile `mturk` (or override via --profile) with policy
@@ -20,6 +22,10 @@ Pre-requisites:
   - The static deployment (GitHub Pages) is live at --base_url. There is
     NO default value: pass it explicitly to force a conscious choice
     between sandbox / production / staging URLs.
+
+For partial / pilot launches (e.g. a $0.01 pipeline smoke test) pass
+`--max_hits N` to launch only the first N HITs; the rest stay queued in
+`aliasmap_full.json` for a later full launch.
 """
 
 from __future__ import annotations
@@ -63,6 +69,10 @@ def main() -> None:
     parser.add_argument("--sandbox",     action="store_true")
     parser.add_argument("--dry_run",     action="store_true")
     parser.add_argument("--max_assignments", type=int, default=1)
+    parser.add_argument("--max_hits",    type=int, default=0,
+                        help="Launch at most N HITs (0=all). Use --max_hits 1 for a single-HIT smoke test.")
+    parser.add_argument("--min_balance", type=float, default=0.0,
+                        help="Refuse to launch unless available balance >= this many USD (0=skip check).")
     parser.add_argument("--lifetime_seconds", type=int, default=LIFETIME_SECONDS)
     args = parser.parse_args()
 
@@ -73,8 +83,8 @@ def main() -> None:
     to_launch = sorted(hid for hid in full_map if hid not in RESERVED_HITIDS)
     expected = sum(1 for k in full_map if k.startswith("H_") and k != "H_TUTORIAL")
     assert len(to_launch) == expected, f"to_launch={len(to_launch)} != expected={expected}"
-    if not args.dry_run:
-        assert len(to_launch) == 240, f"expected 240 production HITs, got {len(to_launch)}"
+    if args.max_hits > 0:
+        to_launch = to_launch[: args.max_hits]
 
     if args.dry_run:
         print(f"[DRY RUN] would launch {len(to_launch)} HITs")
@@ -92,8 +102,8 @@ def main() -> None:
 
     bal = client.get_account_balance()["AvailableBalance"]
     print(f"Account balance: ${bal} (sandbox={args.sandbox})")
-    if not args.sandbox and float(bal) < 700:
-        sys.exit(f"Refusing to launch: balance ${bal} < $700 minimum")
+    if not args.sandbox and args.min_balance > 0 and float(bal) < args.min_balance:
+        sys.exit(f"Refusing to launch: balance ${bal} < ${args.min_balance:.2f} (--min_balance)")
 
     args.out_log.parent.mkdir(parents=True, exist_ok=True)
     with args.out_log.open("w", newline="") as f:
