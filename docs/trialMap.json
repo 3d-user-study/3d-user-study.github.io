@@ -30,15 +30,15 @@
       "slots": [
         {
           "slot": "A",
-          "dir": "01_d85c3093011d4e03a0df7a4049b13816/e0e12bdef5d1e56a"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f9d6ce08cfa80e71"
         },
         {
           "slot": "B",
-          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f1691d1f3a5616d1"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/e0e12bdef5d1e56a"
         },
         {
           "slot": "C",
-          "dir": "01_d85c3093011d4e03a0df7a4049b13816/a590d607fcfe8aea"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/b9cbcb8aece467d0"
         },
         {
           "slot": "D",
@@ -46,16 +46,178 @@
         },
         {
           "slot": "E",
-          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f9d6ce08cfa80e71"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/a590d607fcfe8aea"
         },
         {
           "slot": "F",
-          "dir": "01_d85c3093011d4e03a0df7a4049b13816/b9cbcb8aece467d0"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f1691d1f3a5616d1"
         }
       ]
     },
     {
       "i": 1,
+      "prompt": {
+        "FULL": "deep jade lacquer carriage with deep black lacquer carriage canopy, dark bamboo wood grain coachman seat, dark rosewood grain floorboard, deep jade silk seat, deep jade cloud motif storage box and dark lacquer wood wheel",
+        "parts": [
+          {
+            "label": "carriage canopy",
+            "caption": "deep black lacquer carriage canopy"
+          },
+          {
+            "label": "coachman seat",
+            "caption": "dark bamboo wood grain coachman seat"
+          },
+          {
+            "label": "floorboard",
+            "caption": "dark rosewood grain floorboard"
+          },
+          {
+            "label": "seat",
+            "caption": "deep jade silk seat"
+          },
+          {
+            "label": "storage box",
+            "caption": "deep jade cloud motif storage box"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/b827377f60021b8f"
+        },
+        {
+          "slot": "B",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/ee39bb0cd871f06f"
+        },
+        {
+          "slot": "C",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/e0eca31052a45594"
+        },
+        {
+          "slot": "D",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/4f3013a0fb131341"
+        },
+        {
+          "slot": "E",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/67e22607252541d9"
+        },
+        {
+          "slot": "F",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/9e8cbcab6175bf0f"
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "prompt": {
+        "FULL": "post-apocalyptic scavenger cabinet with scratched concrete surface, salvaged wood drawer and darkened metal knob",
+        "parts": [
+          {
+            "label": "cabinet shell",
+            "caption": "scratched concrete surface"
+          },
+          {
+            "label": "drawer",
+            "caption": "salvaged wood drawer"
+          },
+          {
+            "label": "knob",
+            "caption": "darkened metal knob"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/18d33adb7683c784"
+        },
+        {
+          "slot": "B",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/c2b78a25df5de06e"
+        },
+        {
+          "slot": "C",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/f0e4928bfe3047b7"
+        },
+        {
+          "slot": "D",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/5a766741de3472d4"
+        },
+        {
+          "slot": "E",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/13bdad788966c817"
+        },
+        {
+          "slot": "F",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/e9a696f674cf0974"
+        }
+      ]
+    },
+    {
+      "i": 3,
+      "prompt": {
+        "FULL": "deep jade lacquer carriage with deep black lacquer carriage canopy, dark bamboo wood grain coachman seat, dark rosewood grain floorboard, deep jade silk seat, deep jade cloud motif storage box and dark lacquer wood wheel",
+        "parts": [
+          {
+            "label": "carriage canopy",
+            "caption": "deep black lacquer carriage canopy"
+          },
+          {
+            "label": "coachman seat",
+            "caption": "dark bamboo wood grain coachman seat"
+          },
+          {
+            "label": "floorboard",
+            "caption": "dark rosewood grain floorboard"
+          },
+          {
+            "label": "seat",
+            "caption": "deep jade silk seat"
+          },
+          {
+            "label": "storage box",
+            "caption": "deep jade cloud motif storage box"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/4f3013a0fb131341"
+        },
+        {
+          "slot": "B",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/ee39bb0cd871f06f"
+        },
+        {
+          "slot": "C",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/e0eca31052a45594"
+        },
+        {
+          "slot": "D",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/9e8cbcab6175bf0f"
+        },
+        {
+          "slot": "E",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/b827377f60021b8f"
+        },
+        {
+          "slot": "F",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/67e22607252541d9"
+        }
+      ]
+    },
+    {
+      "i": 4,
       "prompt": {
         "FULL": "ancient ceremonial vehicle with marble veined stone seat and etched clay wheel",
         "parts": [
@@ -97,57 +259,7 @@
       ]
     },
     {
-      "i": 2,
-      "prompt": {
-        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
-        "parts": [
-          {
-            "label": "bench",
-            "caption": "deep jade brocade bench"
-          },
-          {
-            "label": "wagon bed",
-            "caption": "dark bamboo wood grain wagon bed"
-          },
-          {
-            "label": "wagon cover",
-            "caption": "deep jade silk cloud motif wagon cover"
-          },
-          {
-            "label": "wheel",
-            "caption": "dark lacquer wood wheel"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
-        },
-        {
-          "slot": "B",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/ccb6365e99559930"
-        },
-        {
-          "slot": "C",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/c494326a96c89a0f"
-        },
-        {
-          "slot": "D",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/7bcc3f281b6f7a44"
-        },
-        {
-          "slot": "E",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/eb12e7bd9c381f4b"
-        },
-        {
-          "slot": "F",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/c6ac09373aaf26f5"
-        }
-      ]
-    },
-    {
-      "i": 3,
+      "i": 5,
       "prompt": {
         "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
         "parts": [
@@ -193,7 +305,383 @@
       ]
     },
     {
-      "i": 4,
+      "i": 6,
+      "prompt": {
+        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
+        "parts": [
+          {
+            "label": "bench",
+            "caption": "deep jade brocade bench"
+          },
+          {
+            "label": "wagon bed",
+            "caption": "dark bamboo wood grain wagon bed"
+          },
+          {
+            "label": "wagon cover",
+            "caption": "deep jade silk cloud motif wagon cover"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/5db6d3db2fecbad8"
+        },
+        {
+          "slot": "B",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/7c26a7b405b6ee0d"
+        },
+        {
+          "slot": "C",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/234be96979df6120"
+        },
+        {
+          "slot": "D",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/ea35212a33e6e097"
+        },
+        {
+          "slot": "E",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/13a40ecfc4f53dc4"
+        },
+        {
+          "slot": "F",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
+        }
+      ]
+    },
+    {
+      "i": 7,
+      "prompt": {
+        "FULL": "royal marble toilet with gold swirl toilet bowl, deep burgundy brocade toilet seat lid and white marble veined toilet tank",
+        "parts": [
+          {
+            "label": "toilet bowl",
+            "caption": "gold swirl toilet bowl"
+          },
+          {
+            "label": "toilet seat lid",
+            "caption": "deep burgundy brocade toilet seat lid"
+          },
+          {
+            "label": "toilet tank",
+            "caption": "white marble veined toilet tank"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/acf9adaad1c0b4ac"
+        },
+        {
+          "slot": "B",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/28af81b721e5221d"
+        },
+        {
+          "slot": "C",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/69cf85a739af98d6"
+        },
+        {
+          "slot": "D",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/b6707f9a622f61bd"
+        },
+        {
+          "slot": "E",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/ced71cffe32fac20"
+        },
+        {
+          "slot": "F",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/03be5d0010e873fd"
+        }
+      ]
+    },
+    {
+      "i": 8,
+      "prompt": {
+        "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
+        "parts": [
+          {
+            "label": "cup",
+            "caption": "forest green swirl-painted cup"
+          },
+          {
+            "label": "lid",
+            "caption": "dark wood lid"
+          },
+          {
+            "label": "straw",
+            "caption": "deep green straw"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/932cd851026f0453"
+        },
+        {
+          "slot": "B",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/9a27823077603baa"
+        },
+        {
+          "slot": "C",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/4fc390cb372b7680"
+        },
+        {
+          "slot": "D",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/6f3ba2a9e9ee80e0"
+        },
+        {
+          "slot": "E",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/229b24aff068f487"
+        },
+        {
+          "slot": "F",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/877ba24b069341e9"
+        }
+      ]
+    },
+    {
+      "i": 9,
+      "prompt": {
+        "FULL": "ancient ceremonial vehicle with marble veined stone seat and etched clay wheel",
+        "parts": [
+          {
+            "label": "seat",
+            "caption": "marble veined stone seat"
+          },
+          {
+            "label": "wheel",
+            "caption": "etched clay wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "45_1a6d42ef69294498937aab039ececb00/ce0f970962bf906b"
+        },
+        {
+          "slot": "B",
+          "dir": "45_1a6d42ef69294498937aab039ececb00/2bdfe022e7c71dfd"
+        },
+        {
+          "slot": "C",
+          "dir": "45_1a6d42ef69294498937aab039ececb00/810b60587f3ca1c5"
+        },
+        {
+          "slot": "D",
+          "dir": "45_1a6d42ef69294498937aab039ececb00/946ed0049ed26d61"
+        },
+        {
+          "slot": "E",
+          "dir": "45_1a6d42ef69294498937aab039ececb00/f6494fe94c6d2800"
+        },
+        {
+          "slot": "F",
+          "dir": "45_1a6d42ef69294498937aab039ececb00/1f90b0ce3032c400"
+        }
+      ]
+    },
+    {
+      "i": 10,
+      "prompt": {
+        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
+        "parts": [
+          {
+            "label": "bench",
+            "caption": "deep jade brocade bench"
+          },
+          {
+            "label": "wagon bed",
+            "caption": "dark bamboo wood grain wagon bed"
+          },
+          {
+            "label": "wagon cover",
+            "caption": "deep jade silk cloud motif wagon cover"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/c6ac09373aaf26f5"
+        },
+        {
+          "slot": "B",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/7bcc3f281b6f7a44"
+        },
+        {
+          "slot": "C",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
+        },
+        {
+          "slot": "D",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/eb12e7bd9c381f4b"
+        },
+        {
+          "slot": "E",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/c494326a96c89a0f"
+        },
+        {
+          "slot": "F",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/ccb6365e99559930"
+        }
+      ]
+    },
+    {
+      "i": 11,
+      "prompt": {
+        "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
+        "parts": [
+          {
+            "label": "cup",
+            "caption": "forest green swirl-painted cup"
+          },
+          {
+            "label": "lid",
+            "caption": "dark wood lid"
+          },
+          {
+            "label": "straw",
+            "caption": "deep green straw"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/877ba24b069341e9"
+        },
+        {
+          "slot": "B",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/4fc390cb372b7680"
+        },
+        {
+          "slot": "C",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/932cd851026f0453"
+        },
+        {
+          "slot": "D",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/229b24aff068f487"
+        },
+        {
+          "slot": "E",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/9a27823077603baa"
+        },
+        {
+          "slot": "F",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/6f3ba2a9e9ee80e0"
+        }
+      ]
+    },
+    {
+      "i": 12,
+      "prompt": {
+        "FULL": "royal marble toilet with gold swirl toilet bowl, deep burgundy brocade toilet seat lid and white marble veined toilet tank",
+        "parts": [
+          {
+            "label": "toilet bowl",
+            "caption": "gold swirl toilet bowl"
+          },
+          {
+            "label": "toilet seat lid",
+            "caption": "deep burgundy brocade toilet seat lid"
+          },
+          {
+            "label": "toilet tank",
+            "caption": "white marble veined toilet tank"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/b5a4e655d7a66317"
+        },
+        {
+          "slot": "B",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/64692e0ae16a1df8"
+        },
+        {
+          "slot": "C",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/03be5d0010e873fd"
+        },
+        {
+          "slot": "D",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/b125bca938737b81"
+        },
+        {
+          "slot": "E",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/708cc22dc7106682"
+        },
+        {
+          "slot": "F",
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/3d3360b9d282d51d"
+        }
+      ]
+    },
+    {
+      "i": 13,
+      "prompt": {
+        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
+        "parts": [
+          {
+            "label": "bench",
+            "caption": "deep jade brocade bench"
+          },
+          {
+            "label": "wagon bed",
+            "caption": "dark bamboo wood grain wagon bed"
+          },
+          {
+            "label": "wagon cover",
+            "caption": "deep jade silk cloud motif wagon cover"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/13a40ecfc4f53dc4"
+        },
+        {
+          "slot": "B",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/ea35212a33e6e097"
+        },
+        {
+          "slot": "C",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
+        },
+        {
+          "slot": "D",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/7c26a7b405b6ee0d"
+        },
+        {
+          "slot": "E",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/234be96979df6120"
+        },
+        {
+          "slot": "F",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/5db6d3db2fecbad8"
+        }
+      ]
+    },
+    {
+      "i": 14,
       "prompt": {
         "FULL": "deep jade lacquer carriage with deep black lacquer carriage canopy, dark bamboo wood grain coachman seat, dark rosewood grain floorboard, deep jade silk seat, deep jade cloud motif storage box and dark lacquer wood wheel",
         "parts": [
@@ -251,7 +739,7 @@
       ]
     },
     {
-      "i": 5,
+      "i": 15,
       "prompt": {
         "FULL": "desert sand camouflage sports car with rust camouflage seat, tan metal wheel and dark dusty window",
         "parts": [
@@ -272,136 +760,132 @@
       "slots": [
         {
           "slot": "A",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/4bad77a965ba70a4"
-        },
-        {
-          "slot": "B",
           "dir": "48_d53b232eab0048b48835c2caef28f44e/011136ffffd4f554"
         },
         {
-          "slot": "C",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/a8a5afeb69410c0b"
-        },
-        {
-          "slot": "D",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/5ec3bdc1ac9e0937"
-        },
-        {
-          "slot": "E",
+          "slot": "B",
           "dir": "48_d53b232eab0048b48835c2caef28f44e/ddbc572c2ecb9847"
         },
         {
-          "slot": "F",
+          "slot": "C",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/5ec3bdc1ac9e0937"
+        },
+        {
+          "slot": "D",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/4bad77a965ba70a4"
+        },
+        {
+          "slot": "E",
           "dir": "48_d53b232eab0048b48835c2caef28f44e/adc8afbc41baf460"
+        },
+        {
+          "slot": "F",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/a8a5afeb69410c0b"
         }
       ]
     },
     {
-      "i": 6,
+      "i": 16,
       "prompt": {
-        "FULL": "deep sea organic sleigh with seaweed-wrapped gift box, fluid wave-patterned panel, smooth black stone seat, iridescent pearl body and coral-textured bone runner",
+        "FULL": "cosmic witch well, with dark stone well wall with faint gold veins, glowing rune engraved stone base, deep cosmic swirl hat, aged gold well frame, and silver rope and bucket",
         "parts": [
           {
-            "label": "gift box",
-            "caption": "seaweed-wrapped gift box"
+            "label": "well wall",
+            "caption": "dark stone well wall with faint gold veins"
           },
           {
-            "label": "panel",
-            "caption": "fluid wave-patterned panel"
+            "label": "base",
+            "caption": "glowing rune engraved stone base"
           },
           {
-            "label": "seat",
-            "caption": "smooth black stone seat"
+            "label": "hat",
+            "caption": "deep cosmic swirl hat"
           },
           {
-            "label": "sleigh body",
-            "caption": "iridescent pearl body"
+            "label": "well frame",
+            "caption": "aged gold well frame"
           },
           {
-            "label": "sleigh runner",
-            "caption": "coral-textured bone runner"
+            "label": "rope and bucket",
+            "caption": "silver rope and bucket"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/0597921ea09c3775"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/e0e12bdef5d1e56a"
         },
         {
           "slot": "B",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/f6912748d9d24461"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f1691d1f3a5616d1"
         },
         {
           "slot": "C",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/612cd9048e6fa281"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/a590d607fcfe8aea"
         },
         {
           "slot": "D",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/e0becc97d9d0ca50"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/fa97d2f1a0c71a58"
         },
         {
           "slot": "E",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/e53cd3d7cba27271"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f9d6ce08cfa80e71"
         },
         {
           "slot": "F",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/5b23714ea6f83667"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/b9cbcb8aece467d0"
         }
       ]
     },
     {
-      "i": 7,
+      "i": 17,
       "prompt": {
-        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
+        "FULL": "post-apocalyptic scavenger cabinet with scratched concrete surface, salvaged wood drawer and darkened metal knob",
         "parts": [
           {
-            "label": "bench",
-            "caption": "deep jade brocade bench"
+            "label": "cabinet shell",
+            "caption": "scratched concrete surface"
           },
           {
-            "label": "wagon bed",
-            "caption": "dark bamboo wood grain wagon bed"
+            "label": "drawer",
+            "caption": "salvaged wood drawer"
           },
           {
-            "label": "wagon cover",
-            "caption": "deep jade silk cloud motif wagon cover"
-          },
-          {
-            "label": "wheel",
-            "caption": "dark lacquer wood wheel"
+            "label": "knob",
+            "caption": "darkened metal knob"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/5db6d3db2fecbad8"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/5a766741de3472d4"
         },
         {
           "slot": "B",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/7c26a7b405b6ee0d"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/f0e4928bfe3047b7"
         },
         {
           "slot": "C",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/234be96979df6120"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/13bdad788966c817"
         },
         {
           "slot": "D",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/ea35212a33e6e097"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/c2b78a25df5de06e"
         },
         {
           "slot": "E",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/13a40ecfc4f53dc4"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/18d33adb7683c784"
         },
         {
           "slot": "F",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/e9a696f674cf0974"
         }
       ]
     },
     {
-      "i": 8,
+      "i": 18,
       "prompt": {
         "FULL": "royal marble toilet with gold swirl toilet bowl, deep burgundy brocade toilet seat lid and white marble veined toilet tank",
         "parts": [
@@ -447,53 +931,7 @@
       ]
     },
     {
-      "i": 9,
-      "prompt": {
-        "FULL": "post-apocalyptic scavenger cabinet with scratched concrete surface, salvaged wood drawer and darkened metal knob",
-        "parts": [
-          {
-            "label": "cabinet shell",
-            "caption": "scratched concrete surface"
-          },
-          {
-            "label": "drawer",
-            "caption": "salvaged wood drawer"
-          },
-          {
-            "label": "knob",
-            "caption": "darkened metal knob"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/03ce5c51579ced4c"
-        },
-        {
-          "slot": "B",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/993a026f147cebc4"
-        },
-        {
-          "slot": "C",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/7e39070989217ef0"
-        },
-        {
-          "slot": "D",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/18d33adb7683c784"
-        },
-        {
-          "slot": "E",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/3e054c2ce593ca64"
-        },
-        {
-          "slot": "F",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/5adce3f760c9bd79"
-        }
-      ]
-    },
-    {
-      "i": 10,
+      "i": 19,
       "prompt": {
         "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
         "parts": [
@@ -518,7 +956,7 @@
         },
         {
           "slot": "B",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/9a27823077603baa"
+          "dir": "02_16ee83e509e745998f229da44a8387e8/877ba24b069341e9"
         },
         {
           "slot": "C",
@@ -530,30 +968,38 @@
         },
         {
           "slot": "E",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/229b24aff068f487"
+          "dir": "02_16ee83e509e745998f229da44a8387e8/9a27823077603baa"
         },
         {
           "slot": "F",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/877ba24b069341e9"
+          "dir": "02_16ee83e509e745998f229da44a8387e8/229b24aff068f487"
         }
       ]
     },
     {
-      "i": 11,
+      "i": 20,
       "prompt": {
-        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
+        "FULL": "deep jade lacquer carriage with deep black lacquer carriage canopy, dark bamboo wood grain coachman seat, dark rosewood grain floorboard, deep jade silk seat, deep jade cloud motif storage box and dark lacquer wood wheel",
         "parts": [
           {
-            "label": "bench",
-            "caption": "deep jade brocade bench"
+            "label": "carriage canopy",
+            "caption": "deep black lacquer carriage canopy"
           },
           {
-            "label": "wagon bed",
-            "caption": "dark bamboo wood grain wagon bed"
+            "label": "coachman seat",
+            "caption": "dark bamboo wood grain coachman seat"
           },
           {
-            "label": "wagon cover",
-            "caption": "deep jade silk cloud motif wagon cover"
+            "label": "floorboard",
+            "caption": "dark rosewood grain floorboard"
+          },
+          {
+            "label": "seat",
+            "caption": "deep jade silk seat"
+          },
+          {
+            "label": "storage box",
+            "caption": "deep jade cloud motif storage box"
           },
           {
             "label": "wheel",
@@ -564,32 +1010,32 @@
       "slots": [
         {
           "slot": "A",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/ccb6365e99559930"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/9e8cbcab6175bf0f"
         },
         {
           "slot": "B",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/eb12e7bd9c381f4b"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/e0eca31052a45594"
         },
         {
           "slot": "C",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/c494326a96c89a0f"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/4f3013a0fb131341"
         },
         {
           "slot": "D",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/7bcc3f281b6f7a44"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/b827377f60021b8f"
         },
         {
           "slot": "E",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/67e22607252541d9"
         },
         {
           "slot": "F",
-          "dir": "58_1d7b005b0cf241d9890739a549769c86/c6ac09373aaf26f5"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/ee39bb0cd871f06f"
         }
       ]
     },
     {
-      "i": 12,
+      "i": 21,
       "prompt": {
         "FULL": "deep sea organic sleigh with seaweed-wrapped gift box, fluid wave-patterned panel, smooth black stone seat, iridescent pearl body and coral-textured bone runner",
         "parts": [
@@ -643,94 +1089,160 @@
       ]
     },
     {
-      "i": 13,
+      "i": 22,
       "prompt": {
-        "FULL": "post-apocalyptic scavenger cabinet with scratched concrete surface, salvaged wood drawer and darkened metal knob",
+        "FULL": "deep jade lacquer carriage with deep black lacquer carriage canopy, dark bamboo wood grain coachman seat, dark rosewood grain floorboard, deep jade silk seat, deep jade cloud motif storage box and dark lacquer wood wheel",
         "parts": [
           {
-            "label": "cabinet shell",
-            "caption": "scratched concrete surface"
+            "label": "carriage canopy",
+            "caption": "deep black lacquer carriage canopy"
           },
           {
-            "label": "drawer",
-            "caption": "salvaged wood drawer"
+            "label": "coachman seat",
+            "caption": "dark bamboo wood grain coachman seat"
           },
           {
-            "label": "knob",
-            "caption": "darkened metal knob"
+            "label": "floorboard",
+            "caption": "dark rosewood grain floorboard"
+          },
+          {
+            "label": "seat",
+            "caption": "deep jade silk seat"
+          },
+          {
+            "label": "storage box",
+            "caption": "deep jade cloud motif storage box"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/5a766741de3472d4"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/4f3013a0fb131341"
         },
         {
           "slot": "B",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/f0e4928bfe3047b7"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/0d60eaa8004d4b21"
         },
         {
           "slot": "C",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/13bdad788966c817"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/5acd79bf46237b2d"
         },
         {
           "slot": "D",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/c2b78a25df5de06e"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/829187c6836125a7"
         },
         {
           "slot": "E",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/18d33adb7683c784"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/03e205d2695f46a1"
         },
         {
           "slot": "F",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/e9a696f674cf0974"
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/d945e672ecb29751"
         }
       ]
     },
     {
-      "i": 14,
+      "i": 23,
       "prompt": {
-        "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
+        "FULL": "deep sea organic sleigh with seaweed-wrapped gift box, fluid wave-patterned panel, smooth black stone seat, iridescent pearl body and coral-textured bone runner",
         "parts": [
           {
-            "label": "cup",
-            "caption": "forest green swirl-painted cup"
+            "label": "gift box",
+            "caption": "seaweed-wrapped gift box"
           },
           {
-            "label": "lid",
-            "caption": "dark wood lid"
+            "label": "panel",
+            "caption": "fluid wave-patterned panel"
           },
           {
-            "label": "straw",
-            "caption": "deep green straw"
+            "label": "seat",
+            "caption": "smooth black stone seat"
+          },
+          {
+            "label": "sleigh body",
+            "caption": "iridescent pearl body"
+          },
+          {
+            "label": "sleigh runner",
+            "caption": "coral-textured bone runner"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/ee7641e4f7f4bf16"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/19fc849c9677cd72"
         },
         {
           "slot": "B",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/932cd851026f0453"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/4fd78e12d76f3eb6"
         },
         {
           "slot": "C",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/7cf62790f7d6ccc9"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/5798513247a992d3"
         },
         {
           "slot": "D",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/cc23d414f3911d49"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/64214db12b8f42ca"
         },
         {
           "slot": "E",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/a9732dd02aaa1464"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/40b4ed8b1ffc8327"
         },
         {
           "slot": "F",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/06d32c3b5b38c1cc"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/e0becc97d9d0ca50"
+        }
+      ]
+    },
+    {
+      "i": 24,
+      "prompt": {
+        "FULL": "desert sand camouflage sports car with rust camouflage seat, tan metal wheel and dark dusty window",
+        "parts": [
+          {
+            "label": "seat",
+            "caption": "rust camouflage seat"
+          },
+          {
+            "label": "wheel",
+            "caption": "tan metal wheel"
+          },
+          {
+            "label": "window",
+            "caption": "dark dusty window"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/4bad77a965ba70a4"
+        },
+        {
+          "slot": "B",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/011136ffffd4f554"
+        },
+        {
+          "slot": "C",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/a8a5afeb69410c0b"
+        },
+        {
+          "slot": "D",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/5ec3bdc1ac9e0937"
+        },
+        {
+          "slot": "E",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/ddbc572c2ecb9847"
+        },
+        {
+          "slot": "F",
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/adc8afbc41baf460"
         }
       ]
     }
