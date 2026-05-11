@@ -3,97 +3,255 @@
     {
       "i": 0,
       "prompt": {
-        "FULL": "cobalt blue porcelain toilet with white porcelain toilet bowl, ivory linen toilet seat lid and cobalt blue tile toilet tank",
+        "FULL": "cosmic witch well, with dark stone well wall with faint gold veins, glowing rune engraved stone base, deep cosmic swirl hat, aged gold well frame, and silver rope and bucket",
         "parts": [
           {
-            "label": "toilet bowl",
-            "caption": "white porcelain toilet bowl"
+            "label": "well wall",
+            "caption": "dark stone well wall with faint gold veins"
           },
           {
-            "label": "toilet seat lid",
-            "caption": "ivory linen toilet seat lid"
+            "label": "base",
+            "caption": "glowing rune engraved stone base"
           },
           {
-            "label": "toilet tank",
-            "caption": "cobalt blue tile toilet tank"
+            "label": "hat",
+            "caption": "deep cosmic swirl hat"
+          },
+          {
+            "label": "well frame",
+            "caption": "aged gold well frame"
+          },
+          {
+            "label": "rope and bucket",
+            "caption": "silver rope and bucket"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/ef0cb8b19a255d0a"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/e0e12bdef5d1e56a"
         },
         {
           "slot": "B",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/fca0c4bf5e4cf0ea"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f1691d1f3a5616d1"
         },
         {
           "slot": "C",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/dcbb36d54302a1e1"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/a590d607fcfe8aea"
         },
         {
           "slot": "D",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/6ae50773da0f54a1"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/fa97d2f1a0c71a58"
         },
         {
           "slot": "E",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/e6d41a798dd7aae6"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/f9d6ce08cfa80e71"
         },
         {
           "slot": "F",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/07a674d29e8bf473"
+          "dir": "01_d85c3093011d4e03a0df7a4049b13816/b9cbcb8aece467d0"
         }
       ]
     },
     {
       "i": 1,
       "prompt": {
-        "FULL": "cobalt blue porcelain toilet with white porcelain toilet bowl, ivory linen toilet seat lid and cobalt blue tile toilet tank",
+        "FULL": "ancient ceremonial vehicle with marble veined stone seat and etched clay wheel",
         "parts": [
           {
-            "label": "toilet bowl",
-            "caption": "white porcelain toilet bowl"
+            "label": "seat",
+            "caption": "marble veined stone seat"
           },
           {
-            "label": "toilet seat lid",
-            "caption": "ivory linen toilet seat lid"
-          },
-          {
-            "label": "toilet tank",
-            "caption": "cobalt blue tile toilet tank"
+            "label": "wheel",
+            "caption": "etched clay wheel"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/6f41c14a46739703"
+          "dir": "45_1a6d42ef69294498937aab039ececb00/ce0f970962bf906b"
         },
         {
           "slot": "B",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/fca0c4bf5e4cf0ea"
+          "dir": "45_1a6d42ef69294498937aab039ececb00/810b60587f3ca1c5"
         },
         {
           "slot": "C",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/cadbafefd2a08727"
+          "dir": "45_1a6d42ef69294498937aab039ececb00/f6494fe94c6d2800"
         },
         {
           "slot": "D",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/8a7ce8d2ec6c6ae9"
+          "dir": "45_1a6d42ef69294498937aab039ececb00/1f90b0ce3032c400"
         },
         {
           "slot": "E",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/275a8e710a444798"
+          "dir": "45_1a6d42ef69294498937aab039ececb00/2bdfe022e7c71dfd"
         },
         {
           "slot": "F",
-          "dir": "01_0aa910f8ec974330a9a89a5c7cf4e3dd/b4cf99b5d314c3c8"
+          "dir": "45_1a6d42ef69294498937aab039ececb00/946ed0049ed26d61"
         }
       ]
     },
     {
       "i": 2,
+      "prompt": {
+        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
+        "parts": [
+          {
+            "label": "bench",
+            "caption": "deep jade brocade bench"
+          },
+          {
+            "label": "wagon bed",
+            "caption": "dark bamboo wood grain wagon bed"
+          },
+          {
+            "label": "wagon cover",
+            "caption": "deep jade silk cloud motif wagon cover"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
+        },
+        {
+          "slot": "B",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/ccb6365e99559930"
+        },
+        {
+          "slot": "C",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/c494326a96c89a0f"
+        },
+        {
+          "slot": "D",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/7bcc3f281b6f7a44"
+        },
+        {
+          "slot": "E",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/eb12e7bd9c381f4b"
+        },
+        {
+          "slot": "F",
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/c6ac09373aaf26f5"
+        }
+      ]
+    },
+    {
+      "i": 3,
+      "prompt": {
+        "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
+        "parts": [
+          {
+            "label": "cup",
+            "caption": "forest green swirl-painted cup"
+          },
+          {
+            "label": "lid",
+            "caption": "dark wood lid"
+          },
+          {
+            "label": "straw",
+            "caption": "deep green straw"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/932cd851026f0453"
+        },
+        {
+          "slot": "B",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/877ba24b069341e9"
+        },
+        {
+          "slot": "C",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/4fc390cb372b7680"
+        },
+        {
+          "slot": "D",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/6f3ba2a9e9ee80e0"
+        },
+        {
+          "slot": "E",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/9a27823077603baa"
+        },
+        {
+          "slot": "F",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/229b24aff068f487"
+        }
+      ]
+    },
+    {
+      "i": 4,
+      "prompt": {
+        "FULL": "deep jade lacquer carriage with deep black lacquer carriage canopy, dark bamboo wood grain coachman seat, dark rosewood grain floorboard, deep jade silk seat, deep jade cloud motif storage box and dark lacquer wood wheel",
+        "parts": [
+          {
+            "label": "carriage canopy",
+            "caption": "deep black lacquer carriage canopy"
+          },
+          {
+            "label": "coachman seat",
+            "caption": "dark bamboo wood grain coachman seat"
+          },
+          {
+            "label": "floorboard",
+            "caption": "dark rosewood grain floorboard"
+          },
+          {
+            "label": "seat",
+            "caption": "deep jade silk seat"
+          },
+          {
+            "label": "storage box",
+            "caption": "deep jade cloud motif storage box"
+          },
+          {
+            "label": "wheel",
+            "caption": "dark lacquer wood wheel"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/5acd79bf46237b2d"
+        },
+        {
+          "slot": "B",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/03e205d2695f46a1"
+        },
+        {
+          "slot": "C",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/4f3013a0fb131341"
+        },
+        {
+          "slot": "D",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/d945e672ecb29751"
+        },
+        {
+          "slot": "E",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/0d60eaa8004d4b21"
+        },
+        {
+          "slot": "F",
+          "dir": "54_120ac5f53bda4d1d9306a050a3b6e46b/829187c6836125a7"
+        }
+      ]
+    },
+    {
+      "i": 5,
       "prompt": {
         "FULL": "desert sand camouflage sports car with rust camouflage seat, tan metal wheel and dark dusty window",
         "parts": [
@@ -114,628 +272,32 @@
       "slots": [
         {
           "slot": "A",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/86e37a48ebc20140"
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/4bad77a965ba70a4"
         },
         {
           "slot": "B",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/ee4398625d9eeaa8"
-        },
-        {
-          "slot": "C",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/e3886475f969af3a"
-        },
-        {
-          "slot": "D",
           "dir": "48_d53b232eab0048b48835c2caef28f44e/011136ffffd4f554"
         },
         {
-          "slot": "E",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/fdd0b70454108606"
-        },
-        {
-          "slot": "F",
-          "dir": "48_d53b232eab0048b48835c2caef28f44e/4f720fc971254b66"
-        }
-      ]
-    },
-    {
-      "i": 3,
-      "prompt": {
-        "FULL": "post-apocalyptic scavenger cabinet with scratched concrete surface, salvaged wood drawer and darkened metal knob",
-        "parts": [
-          {
-            "label": "cabinet shell",
-            "caption": "scratched concrete surface"
-          },
-          {
-            "label": "drawer",
-            "caption": "salvaged wood drawer"
-          },
-          {
-            "label": "knob",
-            "caption": "darkened metal knob"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/5a766741de3472d4"
-        },
-        {
-          "slot": "B",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/f0e4928bfe3047b7"
-        },
-        {
           "slot": "C",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/18d33adb7683c784"
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/a8a5afeb69410c0b"
         },
         {
           "slot": "D",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/c2b78a25df5de06e"
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/5ec3bdc1ac9e0937"
         },
         {
           "slot": "E",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/e9a696f674cf0974"
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/ddbc572c2ecb9847"
         },
         {
           "slot": "F",
-          "dir": "06_ce195c7adddb44d2bf963c526756362a/13bdad788966c817"
-        }
-      ]
-    },
-    {
-      "i": 4,
-      "prompt": {
-        "FULL": "white marble theater interior with white marble veined column, pale oak door, white marble veined post, classical olympian feast scene screen and ivory linen seat",
-        "parts": [
-          {
-            "label": "column",
-            "caption": "white marble veined column"
-          },
-          {
-            "label": "door",
-            "caption": "pale oak door"
-          },
-          {
-            "label": "post",
-            "caption": "white marble veined post"
-          },
-          {
-            "label": "screen",
-            "caption": "classical olympian feast scene screen"
-          },
-          {
-            "label": "seat",
-            "caption": "ivory linen seat"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "51_925899c3be924547bb4a683751f8595c/9b1bec5f24f32446"
-        },
-        {
-          "slot": "B",
-          "dir": "51_925899c3be924547bb4a683751f8595c/20d14fc42a3df718"
-        },
-        {
-          "slot": "C",
-          "dir": "51_925899c3be924547bb4a683751f8595c/2878ba04b01067e9"
-        },
-        {
-          "slot": "D",
-          "dir": "51_925899c3be924547bb4a683751f8595c/9a3200e2030482d8"
-        },
-        {
-          "slot": "E",
-          "dir": "51_925899c3be924547bb4a683751f8595c/1ff1fd4c784ab45c"
-        },
-        {
-          "slot": "F",
-          "dir": "51_925899c3be924547bb4a683751f8595c/80c67b81ca4129b8"
-        }
-      ]
-    },
-    {
-      "i": 5,
-      "prompt": {
-        "FULL": "steampunk armored sports car with worn brown leather seat, rust-patched iron wheel and boarded dark metal window",
-        "parts": [
-          {
-            "label": "seat",
-            "caption": "worn brown leather seat"
-          },
-          {
-            "label": "wheel",
-            "caption": "rust-patched iron wheel"
-          },
-          {
-            "label": "window",
-            "caption": "boarded dark metal window"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "47_d53b232eab0048b48835c2caef28f44e/b7791b8abbcdc68a"
-        },
-        {
-          "slot": "B",
-          "dir": "47_d53b232eab0048b48835c2caef28f44e/7d77bb011cef10db"
-        },
-        {
-          "slot": "C",
-          "dir": "47_d53b232eab0048b48835c2caef28f44e/bb2417c8afc645e1"
-        },
-        {
-          "slot": "D",
-          "dir": "47_d53b232eab0048b48835c2caef28f44e/5d407fe7ce10f92e"
-        },
-        {
-          "slot": "E",
-          "dir": "47_d53b232eab0048b48835c2caef28f44e/bd75fe1449f634f9"
-        },
-        {
-          "slot": "F",
-          "dir": "47_d53b232eab0048b48835c2caef28f44e/8a4841c4d459f17d"
+          "dir": "48_d53b232eab0048b48835c2caef28f44e/adc8afbc41baf460"
         }
       ]
     },
     {
       "i": 6,
-      "prompt": {
-        "FULL": "dark stone theater interior with dark obsidian column, dark iron door, dark obsidian post, night battle scene screen and deep crimson velvet seat",
-        "parts": [
-          {
-            "label": "column",
-            "caption": "dark obsidian column"
-          },
-          {
-            "label": "door",
-            "caption": "dark iron door"
-          },
-          {
-            "label": "post",
-            "caption": "dark obsidian post"
-          },
-          {
-            "label": "screen",
-            "caption": "night battle scene screen"
-          },
-          {
-            "label": "seat",
-            "caption": "deep crimson velvet seat"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "49_925899c3be924547bb4a683751f8595c/fa8ba3edd4bf7c40"
-        },
-        {
-          "slot": "B",
-          "dir": "49_925899c3be924547bb4a683751f8595c/4e2b90b672d6f378"
-        },
-        {
-          "slot": "C",
-          "dir": "49_925899c3be924547bb4a683751f8595c/f299a20b1e74ef35"
-        },
-        {
-          "slot": "D",
-          "dir": "49_925899c3be924547bb4a683751f8595c/5c06dd5fbafe7653"
-        },
-        {
-          "slot": "E",
-          "dir": "49_925899c3be924547bb4a683751f8595c/8160f25d8eeeb181"
-        },
-        {
-          "slot": "F",
-          "dir": "49_925899c3be924547bb4a683751f8595c/5c797d2f9c199f10"
-        }
-      ]
-    },
-    {
-      "i": 7,
-      "prompt": {
-        "FULL": "ancient ceremonial cabinet with pristine clay body, carved wooden drawer and natural stone knob",
-        "parts": [
-          {
-            "label": "cabinet shell",
-            "caption": "pristine clay body"
-          },
-          {
-            "label": "drawer",
-            "caption": "carved wooden drawer"
-          },
-          {
-            "label": "knob",
-            "caption": "natural stone knob"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "04_ce195c7adddb44d2bf963c526756362a/e6061734a7fda348"
-        },
-        {
-          "slot": "B",
-          "dir": "04_ce195c7adddb44d2bf963c526756362a/81e71bcb945a6979"
-        },
-        {
-          "slot": "C",
-          "dir": "04_ce195c7adddb44d2bf963c526756362a/bc311b98922088cf"
-        },
-        {
-          "slot": "D",
-          "dir": "04_ce195c7adddb44d2bf963c526756362a/732c3e305a34fe17"
-        },
-        {
-          "slot": "E",
-          "dir": "04_ce195c7adddb44d2bf963c526756362a/c9331d79e6ce1a6d"
-        },
-        {
-          "slot": "F",
-          "dir": "04_ce195c7adddb44d2bf963c526756362a/b0bc087da5b850bb"
-        }
-      ]
-    },
-    {
-      "i": 8,
-      "prompt": {
-        "FULL": "deep crimson damask sleigh with deep gold damask gift box, dark rosewood grain panel, dark wine leather seat, deep crimson damask sleigh and gold metal sleigh runner",
-        "parts": [
-          {
-            "label": "gift box",
-            "caption": "deep gold damask gift box"
-          },
-          {
-            "label": "panel",
-            "caption": "dark rosewood grain panel"
-          },
-          {
-            "label": "seat",
-            "caption": "dark wine leather seat"
-          },
-          {
-            "label": "sleigh body",
-            "caption": "deep crimson damask sleigh"
-          },
-          {
-            "label": "sleigh runner",
-            "caption": "gold metal sleigh runner"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "36_02797d5feaac4ccabfdf8b357fa2a13a/2aad51f05aaf9880"
-        },
-        {
-          "slot": "B",
-          "dir": "36_02797d5feaac4ccabfdf8b357fa2a13a/1363c0e4f97d9293"
-        },
-        {
-          "slot": "C",
-          "dir": "36_02797d5feaac4ccabfdf8b357fa2a13a/823b409751522b75"
-        },
-        {
-          "slot": "D",
-          "dir": "36_02797d5feaac4ccabfdf8b357fa2a13a/590dcd50c826aaaf"
-        },
-        {
-          "slot": "E",
-          "dir": "36_02797d5feaac4ccabfdf8b357fa2a13a/38090f093db7477c"
-        },
-        {
-          "slot": "F",
-          "dir": "36_02797d5feaac4ccabfdf8b357fa2a13a/565af1860a80f395"
-        }
-      ]
-    },
-    {
-      "i": 9,
-      "prompt": {
-        "FULL": "crimson dark wood wagon with deep crimson brocade bench, dark oak wood grain wagon bed, deep crimson velvet wagon cover and dark iron wheel",
-        "parts": [
-          {
-            "label": "bench",
-            "caption": "deep crimson brocade bench"
-          },
-          {
-            "label": "wagon bed",
-            "caption": "dark oak wood grain wagon bed"
-          },
-          {
-            "label": "wagon cover",
-            "caption": "deep crimson velvet wagon cover"
-          },
-          {
-            "label": "wheel",
-            "caption": "dark iron wheel"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "57_1d7b005b0cf241d9890739a549769c86/8ecf7be79f1f0be1"
-        },
-        {
-          "slot": "B",
-          "dir": "57_1d7b005b0cf241d9890739a549769c86/7a5eca1f8ef60fbb"
-        },
-        {
-          "slot": "C",
-          "dir": "57_1d7b005b0cf241d9890739a549769c86/51c535c6b72a9579"
-        },
-        {
-          "slot": "D",
-          "dir": "57_1d7b005b0cf241d9890739a549769c86/ef6ad1bc6ad89223"
-        },
-        {
-          "slot": "E",
-          "dir": "57_1d7b005b0cf241d9890739a549769c86/4ca907b14e95bb0a"
-        },
-        {
-          "slot": "F",
-          "dir": "57_1d7b005b0cf241d9890739a549769c86/25abcc5cb51711a4"
-        }
-      ]
-    },
-    {
-      "i": 10,
-      "prompt": {
-        "FULL": "polished mahogany luxury cable car, with polished gold mount, Baroque allegorical painting panel, and onyx marble chair",
-        "parts": [
-          {
-            "label": "mount",
-            "caption": "polished gold mount"
-          },
-          {
-            "label": "window",
-            "caption": "Baroque allegorical painting panel"
-          },
-          {
-            "label": "chair",
-            "caption": "onyx marble chair"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "02_9176a3219f494f779ca8ea08407c4c64/d9370dc556b64db2"
-        },
-        {
-          "slot": "B",
-          "dir": "02_9176a3219f494f779ca8ea08407c4c64/0b56fd79a67cdf17"
-        },
-        {
-          "slot": "C",
-          "dir": "02_9176a3219f494f779ca8ea08407c4c64/cb52bea008394e1f"
-        },
-        {
-          "slot": "D",
-          "dir": "02_9176a3219f494f779ca8ea08407c4c64/58ccf833f8a3d8c3"
-        },
-        {
-          "slot": "E",
-          "dir": "02_9176a3219f494f779ca8ea08407c4c64/b0862c79fb7b596b"
-        },
-        {
-          "slot": "F",
-          "dir": "02_9176a3219f494f779ca8ea08407c4c64/c671b7002c7232d7"
-        }
-      ]
-    },
-    {
-      "i": 11,
-      "prompt": {
-        "FULL": "feudal japanese sleigh with cherry blossom painted gift box, ink wash landscape panel, woven straw seat, deep brown lacquered body and bamboo-patterned wood grain runner",
-        "parts": [
-          {
-            "label": "gift box",
-            "caption": "cherry blossom painted gift box"
-          },
-          {
-            "label": "panel",
-            "caption": "ink wash landscape panel"
-          },
-          {
-            "label": "seat",
-            "caption": "woven straw seat"
-          },
-          {
-            "label": "sleigh body",
-            "caption": "deep brown lacquered body"
-          },
-          {
-            "label": "sleigh runner",
-            "caption": "bamboo-patterned wood grain runner"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "34_02797d5feaac4ccabfdf8b357fa2a13a/cb70c72623540e2a"
-        },
-        {
-          "slot": "B",
-          "dir": "34_02797d5feaac4ccabfdf8b357fa2a13a/854f256d51ea2ddd"
-        },
-        {
-          "slot": "C",
-          "dir": "34_02797d5feaac4ccabfdf8b357fa2a13a/7a7fa62c9adf4d31"
-        },
-        {
-          "slot": "D",
-          "dir": "34_02797d5feaac4ccabfdf8b357fa2a13a/f4e291e996b2cf42"
-        },
-        {
-          "slot": "E",
-          "dir": "34_02797d5feaac4ccabfdf8b357fa2a13a/6144bc390f9a468c"
-        },
-        {
-          "slot": "F",
-          "dir": "34_02797d5feaac4ccabfdf8b357fa2a13a/872a7e3d772fccec"
-        }
-      ]
-    },
-    {
-      "i": 12,
-      "prompt": {
-        "FULL": "japanese lacquer ritual case with vermilion candle and dark gold handle",
-        "parts": [
-          {
-            "label": "candle",
-            "caption": "vermilion candle"
-          },
-          {
-            "label": "handle",
-            "caption": "dark gold handle"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "53_ee390d5fdf7149ce96338162ae3b10b0/19fa00fca0ecc237"
-        },
-        {
-          "slot": "B",
-          "dir": "53_ee390d5fdf7149ce96338162ae3b10b0/7c2c2d5a210b171e"
-        },
-        {
-          "slot": "C",
-          "dir": "53_ee390d5fdf7149ce96338162ae3b10b0/9dc586762d3472e3"
-        },
-        {
-          "slot": "D",
-          "dir": "53_ee390d5fdf7149ce96338162ae3b10b0/92b2c38016a14117"
-        },
-        {
-          "slot": "E",
-          "dir": "53_ee390d5fdf7149ce96338162ae3b10b0/2f145c969b9ad1fc"
-        },
-        {
-          "slot": "F",
-          "dir": "53_ee390d5fdf7149ce96338162ae3b10b0/147ca2e51091dfaf"
-        }
-      ]
-    },
-    {
-      "i": 13,
-      "prompt": {
-        "FULL": "midnight black toy cart with black canvas box, dark iron pipe, deep red leather sear, dark iron side mirror and black metal wheel",
-        "parts": [
-          {
-            "label": "box",
-            "caption": "black canvas box"
-          },
-          {
-            "label": "pipe",
-            "caption": "dark iron pipe"
-          },
-          {
-            "label": "sear",
-            "caption": "deep red leather sear"
-          },
-          {
-            "label": "side mirror",
-            "caption": "dark iron side mirror"
-          },
-          {
-            "label": "wheel",
-            "caption": "black metal wheel"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "09_0ae3255707854840b7f7023ed93cc7ec/053a33edf3cd88c4"
-        },
-        {
-          "slot": "B",
-          "dir": "09_0ae3255707854840b7f7023ed93cc7ec/03a7e153526205a5"
-        },
-        {
-          "slot": "C",
-          "dir": "09_0ae3255707854840b7f7023ed93cc7ec/c4dade52341c7583"
-        },
-        {
-          "slot": "D",
-          "dir": "09_0ae3255707854840b7f7023ed93cc7ec/418acf10f3cb89bb"
-        },
-        {
-          "slot": "E",
-          "dir": "09_0ae3255707854840b7f7023ed93cc7ec/679b6d5ed09ea500"
-        },
-        {
-          "slot": "F",
-          "dir": "09_0ae3255707854840b7f7023ed93cc7ec/a93ad77fcb4c2e65"
-        }
-      ]
-    },
-    {
-      "i": 14,
-      "prompt": {
-        "FULL": "steampunk industrial doghouse with copper mechanical figure, weathered brass panel body, scuffed bronze gears and patina-green riveted roof",
-        "parts": [
-          {
-            "label": "cat",
-            "caption": "copper mechanical figure"
-          },
-          {
-            "label": "house body",
-            "caption": "weathered brass panel body"
-          },
-          {
-            "label": "paw print",
-            "caption": "scuffed bronze gears"
-          },
-          {
-            "label": "roof",
-            "caption": "patina-green riveted roof"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "33_177eda88702e44838857cc4a7b8a2b1d/8c7da9de2a6f5a96"
-        },
-        {
-          "slot": "B",
-          "dir": "33_177eda88702e44838857cc4a7b8a2b1d/d3087199b2701ab2"
-        },
-        {
-          "slot": "C",
-          "dir": "33_177eda88702e44838857cc4a7b8a2b1d/421412460a8d6874"
-        },
-        {
-          "slot": "D",
-          "dir": "33_177eda88702e44838857cc4a7b8a2b1d/cb35da926ff6099f"
-        },
-        {
-          "slot": "E",
-          "dir": "33_177eda88702e44838857cc4a7b8a2b1d/46dcff4ce692bf46"
-        },
-        {
-          "slot": "F",
-          "dir": "33_177eda88702e44838857cc4a7b8a2b1d/f4031669d9de391f"
-        }
-      ]
-    },
-    {
-      "i": 15,
       "prompt": {
         "FULL": "deep sea organic sleigh with seaweed-wrapped gift box, fluid wave-patterned panel, smooth black stone seat, iridescent pearl body and coral-textured bone runner",
         "parts": [
@@ -764,316 +326,174 @@
       "slots": [
         {
           "slot": "A",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/4fd78e12d76f3eb6"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/0597921ea09c3775"
         },
         {
           "slot": "B",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/64214db12b8f42ca"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/f6912748d9d24461"
         },
         {
           "slot": "C",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/19fc849c9677cd72"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/612cd9048e6fa281"
         },
         {
           "slot": "D",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/5798513247a992d3"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/e0becc97d9d0ca50"
         },
         {
           "slot": "E",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/40b4ed8b1ffc8327"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/e53cd3d7cba27271"
         },
         {
           "slot": "F",
-          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/e0becc97d9d0ca50"
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/5b23714ea6f83667"
         }
       ]
     },
     {
-      "i": 16,
+      "i": 7,
       "prompt": {
-        "FULL": "deep crimson damask covered wagon with deep wine velvet bench, dark mahogany wood grain wagon bed, deep crimson damask wagon cover and gold metal wheel",
+        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
         "parts": [
           {
             "label": "bench",
-            "caption": "deep wine velvet bench"
+            "caption": "deep jade brocade bench"
           },
           {
             "label": "wagon bed",
-            "caption": "dark mahogany wood grain wagon bed"
+            "caption": "dark bamboo wood grain wagon bed"
           },
           {
             "label": "wagon cover",
-            "caption": "deep crimson damask wagon cover"
+            "caption": "deep jade silk cloud motif wagon cover"
           },
           {
             "label": "wheel",
-            "caption": "gold metal wheel"
+            "caption": "dark lacquer wood wheel"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "59_1d7b005b0cf241d9890739a549769c86/8c1754c13a115f09"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/5db6d3db2fecbad8"
         },
         {
           "slot": "B",
-          "dir": "59_1d7b005b0cf241d9890739a549769c86/41121c9f8bd585ec"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/7c26a7b405b6ee0d"
         },
         {
           "slot": "C",
-          "dir": "59_1d7b005b0cf241d9890739a549769c86/3c8e7e44111563bd"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/234be96979df6120"
         },
         {
           "slot": "D",
-          "dir": "59_1d7b005b0cf241d9890739a549769c86/d347b1f065419f82"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/ea35212a33e6e097"
         },
         {
           "slot": "E",
-          "dir": "59_1d7b005b0cf241d9890739a549769c86/c19b3fdf235e529f"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/13a40ecfc4f53dc4"
         },
         {
           "slot": "F",
-          "dir": "59_1d7b005b0cf241d9890739a549769c86/da3b89b195c12a24"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
         }
       ]
     },
     {
-      "i": 17,
+      "i": 8,
       "prompt": {
-        "FULL": "wild west frontier cup with weathered wood with knots, stitched leather cover and wrapped rawhide tube",
-        "parts": [
-          {
-            "label": "cup",
-            "caption": "weathered wood with knots"
-          },
-          {
-            "label": "lid",
-            "caption": "stitched leather cover"
-          },
-          {
-            "label": "straw",
-            "caption": "wrapped rawhide tube"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "42_16ee83e509e745998f229da44a8387e8/0fc603413c383652"
-        },
-        {
-          "slot": "B",
-          "dir": "42_16ee83e509e745998f229da44a8387e8/ed5430ab6b8bced6"
-        },
-        {
-          "slot": "C",
-          "dir": "42_16ee83e509e745998f229da44a8387e8/d7db526b49cafa9d"
-        },
-        {
-          "slot": "D",
-          "dir": "42_16ee83e509e745998f229da44a8387e8/3fcf8c93e100a0f8"
-        },
-        {
-          "slot": "E",
-          "dir": "42_16ee83e509e745998f229da44a8387e8/c62626356e8b9b32"
-        },
-        {
-          "slot": "F",
-          "dir": "42_16ee83e509e745998f229da44a8387e8/b2dbfb9fc9a8b0e9"
-        }
-      ]
-    },
-    {
-      "i": 18,
-      "prompt": {
-        "FULL": "arcane magical toilet with etched sapphire toilet bowl, silvered mystical toilet seat lid and glowing runic toilet tank",
+        "FULL": "royal marble toilet with gold swirl toilet bowl, deep burgundy brocade toilet seat lid and white marble veined toilet tank",
         "parts": [
           {
             "label": "toilet bowl",
-            "caption": "etched sapphire toilet bowl"
+            "caption": "gold swirl toilet bowl"
           },
           {
             "label": "toilet seat lid",
-            "caption": "silvered mystical toilet seat lid"
+            "caption": "deep burgundy brocade toilet seat lid"
           },
           {
             "label": "toilet tank",
-            "caption": "glowing runic toilet tank"
+            "caption": "white marble veined toilet tank"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "32_0aa910f8ec974330a9a89a5c7cf4e3dd/d781ab1e856404a2"
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/b125bca938737b81"
         },
         {
           "slot": "B",
-          "dir": "32_0aa910f8ec974330a9a89a5c7cf4e3dd/807165a324d1bfb4"
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/03be5d0010e873fd"
         },
         {
           "slot": "C",
-          "dir": "32_0aa910f8ec974330a9a89a5c7cf4e3dd/a82a9ce8cb5d8bc5"
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/64692e0ae16a1df8"
         },
         {
           "slot": "D",
-          "dir": "32_0aa910f8ec974330a9a89a5c7cf4e3dd/d103d4fc080656b6"
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/b5a4e655d7a66317"
         },
         {
           "slot": "E",
-          "dir": "32_0aa910f8ec974330a9a89a5c7cf4e3dd/d88dc620b3af8dd2"
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/3d3360b9d282d51d"
         },
         {
           "slot": "F",
-          "dir": "32_0aa910f8ec974330a9a89a5c7cf4e3dd/234d77d6a07df0c5"
+          "dir": "27_0aa910f8ec974330a9a89a5c7cf4e3dd/708cc22dc7106682"
         }
       ]
     },
     {
-      "i": 19,
+      "i": 9,
       "prompt": {
-        "FULL": "rustic barnwood farmhouse cabinet with bleached wood body, weathered wood grain drawer and barn red knob",
+        "FULL": "post-apocalyptic scavenger cabinet with scratched concrete surface, salvaged wood drawer and darkened metal knob",
         "parts": [
           {
             "label": "cabinet shell",
-            "caption": "bleached wood body"
+            "caption": "scratched concrete surface"
           },
           {
             "label": "drawer",
-            "caption": "weathered wood grain drawer"
+            "caption": "salvaged wood drawer"
           },
           {
             "label": "knob",
-            "caption": "barn red knob"
+            "caption": "darkened metal knob"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "07_ce195c7adddb44d2bf963c526756362a/d86889bd20a6f88a"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/03ce5c51579ced4c"
         },
         {
           "slot": "B",
-          "dir": "07_ce195c7adddb44d2bf963c526756362a/ba80b15a916814b3"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/993a026f147cebc4"
         },
         {
           "slot": "C",
-          "dir": "07_ce195c7adddb44d2bf963c526756362a/083b4bbd173191f9"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/7e39070989217ef0"
         },
         {
           "slot": "D",
-          "dir": "07_ce195c7adddb44d2bf963c526756362a/1ec1b39198781f9b"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/18d33adb7683c784"
         },
         {
           "slot": "E",
-          "dir": "07_ce195c7adddb44d2bf963c526756362a/894ea2a574d6b497"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/3e054c2ce593ca64"
         },
         {
           "slot": "F",
-          "dir": "07_ce195c7adddb44d2bf963c526756362a/377636d5d3e1e092"
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/5adce3f760c9bd79"
         }
       ]
     },
     {
-      "i": 20,
-      "prompt": {
-        "FULL": "haunted victorian wagon with dark weathered wood bench, faded burgundy fabric wagon bed, cracked black paint wagon cover and faded ivory ceramic wheel",
-        "parts": [
-          {
-            "label": "bench",
-            "caption": "dark weathered wood bench"
-          },
-          {
-            "label": "wagon bed",
-            "caption": "faded burgundy fabric wagon bed"
-          },
-          {
-            "label": "wagon cover",
-            "caption": "cracked black paint wagon cover"
-          },
-          {
-            "label": "wheel",
-            "caption": "faded ivory ceramic wheel"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "55_1d7b005b0cf241d9890739a549769c86/d8f449c851ba15c4"
-        },
-        {
-          "slot": "B",
-          "dir": "55_1d7b005b0cf241d9890739a549769c86/a5e0ad7260fa8baf"
-        },
-        {
-          "slot": "C",
-          "dir": "55_1d7b005b0cf241d9890739a549769c86/e87fd55af9eae879"
-        },
-        {
-          "slot": "D",
-          "dir": "55_1d7b005b0cf241d9890739a549769c86/4c7400620c31ee64"
-        },
-        {
-          "slot": "E",
-          "dir": "55_1d7b005b0cf241d9890739a549769c86/fcfe56b713df53fc"
-        },
-        {
-          "slot": "F",
-          "dir": "55_1d7b005b0cf241d9890739a549769c86/1e51d36ca81f3028"
-        }
-      ]
-    },
-    {
-      "i": 21,
-      "prompt": {
-        "FULL": "cyberpunk graffiti toilet with dark steel toilet bowl, spray-painted toilet seat lid and vibrant graffiti toilet tank",
-        "parts": [
-          {
-            "label": "toilet bowl",
-            "caption": "dark steel toilet bowl"
-          },
-          {
-            "label": "toilet seat lid",
-            "caption": "spray-painted toilet seat lid"
-          },
-          {
-            "label": "toilet tank",
-            "caption": "vibrant graffiti toilet tank"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "24_0aa910f8ec974330a9a89a5c7cf4e3dd/3a301e538fb346c1"
-        },
-        {
-          "slot": "B",
-          "dir": "24_0aa910f8ec974330a9a89a5c7cf4e3dd/1c8b2eaf0733013c"
-        },
-        {
-          "slot": "C",
-          "dir": "24_0aa910f8ec974330a9a89a5c7cf4e3dd/195abf0cfebb2f47"
-        },
-        {
-          "slot": "D",
-          "dir": "24_0aa910f8ec974330a9a89a5c7cf4e3dd/7b57aa16cff0c05b"
-        },
-        {
-          "slot": "E",
-          "dir": "24_0aa910f8ec974330a9a89a5c7cf4e3dd/bcc54a113af4d2d6"
-        },
-        {
-          "slot": "F",
-          "dir": "24_0aa910f8ec974330a9a89a5c7cf4e3dd/892d2c037ab84aaf"
-        }
-      ]
-    },
-    {
-      "i": 22,
+      "i": 10,
       "prompt": {
         "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
         "parts": [
@@ -1094,15 +514,15 @@
       "slots": [
         {
           "slot": "A",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/4fc390cb372b7680"
-        },
-        {
-          "slot": "B",
           "dir": "02_16ee83e509e745998f229da44a8387e8/932cd851026f0453"
         },
         {
+          "slot": "B",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/9a27823077603baa"
+        },
+        {
           "slot": "C",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/877ba24b069341e9"
+          "dir": "02_16ee83e509e745998f229da44a8387e8/4fc390cb372b7680"
         },
         {
           "slot": "D",
@@ -1110,99 +530,207 @@
         },
         {
           "slot": "E",
-          "dir": "02_16ee83e509e745998f229da44a8387e8/9a27823077603baa"
-        },
-        {
-          "slot": "F",
           "dir": "02_16ee83e509e745998f229da44a8387e8/229b24aff068f487"
-        }
-      ]
-    },
-    {
-      "i": 23,
-      "prompt": {
-        "FULL": "copper rust ceramic vase with rust brown floral foam, bright amber rose and oxidized copper vase",
-        "parts": [
-          {
-            "label": "floral foam",
-            "caption": "rust brown floral foam"
-          },
-          {
-            "label": "rose",
-            "caption": "bright amber rose"
-          },
-          {
-            "label": "vase",
-            "caption": "oxidized copper vase"
-          }
-        ]
-      },
-      "slots": [
-        {
-          "slot": "A",
-          "dir": "08_0ad7aecfcb874fceaa38a98436991c03/fc44c7d2fdb57564"
-        },
-        {
-          "slot": "B",
-          "dir": "08_0ad7aecfcb874fceaa38a98436991c03/4b04ecf37ff7e812"
-        },
-        {
-          "slot": "C",
-          "dir": "08_0ad7aecfcb874fceaa38a98436991c03/eba8bb79093be3bf"
-        },
-        {
-          "slot": "D",
-          "dir": "08_0ad7aecfcb874fceaa38a98436991c03/0abf397d5d874a35"
-        },
-        {
-          "slot": "E",
-          "dir": "08_0ad7aecfcb874fceaa38a98436991c03/cc0165e88e39868e"
         },
         {
           "slot": "F",
-          "dir": "08_0ad7aecfcb874fceaa38a98436991c03/268e02bbf2922694"
+          "dir": "02_16ee83e509e745998f229da44a8387e8/877ba24b069341e9"
         }
       ]
     },
     {
-      "i": 24,
+      "i": 11,
       "prompt": {
-        "FULL": "ancient ceremonial vehicle with marble veined stone seat and etched clay wheel",
+        "FULL": "deep jade bamboo wagon with deep jade brocade bench, dark bamboo wood grain wagon bed, deep jade silk cloud motif wagon cover and dark lacquer wood wheel",
         "parts": [
           {
-            "label": "seat",
-            "caption": "marble veined stone seat"
+            "label": "bench",
+            "caption": "deep jade brocade bench"
+          },
+          {
+            "label": "wagon bed",
+            "caption": "dark bamboo wood grain wagon bed"
+          },
+          {
+            "label": "wagon cover",
+            "caption": "deep jade silk cloud motif wagon cover"
           },
           {
             "label": "wheel",
-            "caption": "etched clay wheel"
+            "caption": "dark lacquer wood wheel"
           }
         ]
       },
       "slots": [
         {
           "slot": "A",
-          "dir": "45_1a6d42ef69294498937aab039ececb00/f6494fe94c6d2800"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/ccb6365e99559930"
         },
         {
           "slot": "B",
-          "dir": "45_1a6d42ef69294498937aab039ececb00/946ed0049ed26d61"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/eb12e7bd9c381f4b"
         },
         {
           "slot": "C",
-          "dir": "45_1a6d42ef69294498937aab039ececb00/1f90b0ce3032c400"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/c494326a96c89a0f"
         },
         {
           "slot": "D",
-          "dir": "45_1a6d42ef69294498937aab039ececb00/2bdfe022e7c71dfd"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/7bcc3f281b6f7a44"
         },
         {
           "slot": "E",
-          "dir": "45_1a6d42ef69294498937aab039ececb00/810b60587f3ca1c5"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/d9045d899f7c81b9"
         },
         {
           "slot": "F",
-          "dir": "45_1a6d42ef69294498937aab039ececb00/ce0f970962bf906b"
+          "dir": "58_1d7b005b0cf241d9890739a549769c86/c6ac09373aaf26f5"
+        }
+      ]
+    },
+    {
+      "i": 12,
+      "prompt": {
+        "FULL": "deep sea organic sleigh with seaweed-wrapped gift box, fluid wave-patterned panel, smooth black stone seat, iridescent pearl body and coral-textured bone runner",
+        "parts": [
+          {
+            "label": "gift box",
+            "caption": "seaweed-wrapped gift box"
+          },
+          {
+            "label": "panel",
+            "caption": "fluid wave-patterned panel"
+          },
+          {
+            "label": "seat",
+            "caption": "smooth black stone seat"
+          },
+          {
+            "label": "sleigh body",
+            "caption": "iridescent pearl body"
+          },
+          {
+            "label": "sleigh runner",
+            "caption": "coral-textured bone runner"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/40b4ed8b1ffc8327"
+        },
+        {
+          "slot": "B",
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/64214db12b8f42ca"
+        },
+        {
+          "slot": "C",
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/e0becc97d9d0ca50"
+        },
+        {
+          "slot": "D",
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/4fd78e12d76f3eb6"
+        },
+        {
+          "slot": "E",
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/5798513247a992d3"
+        },
+        {
+          "slot": "F",
+          "dir": "35_02797d5feaac4ccabfdf8b357fa2a13a/19fc849c9677cd72"
+        }
+      ]
+    },
+    {
+      "i": 13,
+      "prompt": {
+        "FULL": "post-apocalyptic scavenger cabinet with scratched concrete surface, salvaged wood drawer and darkened metal knob",
+        "parts": [
+          {
+            "label": "cabinet shell",
+            "caption": "scratched concrete surface"
+          },
+          {
+            "label": "drawer",
+            "caption": "salvaged wood drawer"
+          },
+          {
+            "label": "knob",
+            "caption": "darkened metal knob"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/5a766741de3472d4"
+        },
+        {
+          "slot": "B",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/f0e4928bfe3047b7"
+        },
+        {
+          "slot": "C",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/13bdad788966c817"
+        },
+        {
+          "slot": "D",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/c2b78a25df5de06e"
+        },
+        {
+          "slot": "E",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/18d33adb7683c784"
+        },
+        {
+          "slot": "F",
+          "dir": "06_ce195c7adddb44d2bf963c526756362a/e9a696f674cf0974"
+        }
+      ]
+    },
+    {
+      "i": 14,
+      "prompt": {
+        "FULL": "forest green swirl bubble tea with forest green swirl-painted cup, dark wood lid and deep green straw",
+        "parts": [
+          {
+            "label": "cup",
+            "caption": "forest green swirl-painted cup"
+          },
+          {
+            "label": "lid",
+            "caption": "dark wood lid"
+          },
+          {
+            "label": "straw",
+            "caption": "deep green straw"
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot": "A",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/ee7641e4f7f4bf16"
+        },
+        {
+          "slot": "B",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/932cd851026f0453"
+        },
+        {
+          "slot": "C",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/7cf62790f7d6ccc9"
+        },
+        {
+          "slot": "D",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/cc23d414f3911d49"
+        },
+        {
+          "slot": "E",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/a9732dd02aaa1464"
+        },
+        {
+          "slot": "F",
+          "dir": "02_16ee83e509e745998f229da44a8387e8/06d32c3b5b38c1cc"
         }
       ]
     }
