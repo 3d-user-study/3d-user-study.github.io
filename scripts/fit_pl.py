@@ -20,12 +20,11 @@ For each sample we
      and refit each draw,
   4. take 2.5 / 97.5 percentiles per method as the 95% CI.
 
-By default only `kind == 'main'` rankings are used. Pass
-`--include_vigilance` to additionally use vigilance trials as 5-method
-partial rankings (the `_corrupt` slot is stripped; choix supports
-partial rankings natively). The vigilance pass criterion already
-guarantees `_corrupt` was placed last, so its removal yields a clean
-5-method top-to-bottom ranking of the remaining real methods.
+Only `kind == 'main'` rankings are used. Vigilance rankings are
+degenerate under the current vigilance design (5 `_corrupt_K` bait
+slots + 1 `spotex` target, with the pass criterion forcing spotex to
+rank 1) and carry no PL signal, so reconcile.py emits them for audit
+but fit_pl.py ignores them.
 
 A small alpha regularizes both the point fit and bootstrap refits, which
 keeps choix stable even when a bootstrap draw produces a disconnected
@@ -45,7 +44,6 @@ import pandas as pd
 METHODS: list[str] = ["spotex", "goatex", "mvadapter", "TEXGen", "paint3d", "syncmvd"]
 METHOD_TO_IDX: dict[str, int] = {m: i for i, m in enumerate(METHODS)}
 N_METHODS: int = len(METHODS)
-CORRUPT_TOKEN: str = "_corrupt"
 
 BOOTSTRAP_ITER: int = 1000
 CI_LOW: float = 2.5
@@ -70,33 +68,18 @@ def _fit_one(rankings: list[tuple[int, ...]]) -> np.ndarray:
     return _softmax(np.asarray(params))
 
 
-def _row_to_ranking(row: pd.Series, include_vigilance: bool) -> tuple[int, ...] | None:
-    kind = row["kind"]
-    if kind == "main":
-        out: list[int] = []
-        for col in RANK_COLS:
-            m = row[col]
-            if m not in METHOD_TO_IDX:
-                return None
-            out.append(METHOD_TO_IDX[m])
-        if len(set(out)) != N_METHODS:
+def _row_to_ranking(row: pd.Series) -> tuple[int, ...] | None:
+    if row["kind"] != "main":
+        return None
+    out: list[int] = []
+    for col in RANK_COLS:
+        m = row[col]
+        if m not in METHOD_TO_IDX:
             return None
-        return tuple(out)
-
-    if kind == "vigilance" and include_vigilance:
-        out2: list[int] = []
-        for col in RANK_COLS:
-            m = row[col]
-            if m == CORRUPT_TOKEN:
-                continue
-            if m not in METHOD_TO_IDX:
-                return None
-            out2.append(METHOD_TO_IDX[m])
-        if len(out2) != N_METHODS - 1 or len(set(out2)) != N_METHODS - 1:
-            return None
-        return tuple(out2)
-
-    return None
+        out.append(METHOD_TO_IDX[m])
+    if len(set(out)) != N_METHODS:
+        return None
+    return tuple(out)
 
 
 def main() -> None:
@@ -105,10 +88,6 @@ def main() -> None:
                         default=Path("texture-study/analysis/rankings.csv"))
     parser.add_argument("--out_csv",  type=Path,
                         default=Path("texture-study/analysis/pl_per_sample.csv"))
-    parser.add_argument("--include_vigilance", action="store_true",
-                        help="Also use vigilance trials as 5-method partial "
-                             "rankings (corrupt slot stripped). Default: "
-                             "main trials only.")
     parser.add_argument("--bootstrap_iter", type=int, default=BOOTSTRAP_ITER)
     parser.add_argument("--seed",           type=int, default=2024)
     args = parser.parse_args()
@@ -126,7 +105,7 @@ def main() -> None:
         sub = df[df["sample"] == sample]
         rankings: list[tuple[int, ...]] = []
         for _, r in sub.iterrows():
-            ranking = _row_to_ranking(r, args.include_vigilance)
+            ranking = _row_to_ranking(r)
             if ranking is not None:
                 rankings.append(ranking)
         n = len(rankings)
@@ -165,8 +144,6 @@ def main() -> None:
 
     n_done = len(samples) - len(skipped)
     print(f"PL fit complete: {n_done} samples ({len(rows)} rows) -> {args.out_csv}")
-    if args.include_vigilance:
-        print("  (vigilance trials included as 5-method partial rankings)")
     if skipped:
         print(f"  skipped (no rankings): {skipped}")
 

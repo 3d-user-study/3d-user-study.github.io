@@ -22,8 +22,9 @@ CSV column expectations from MTurk batch results:
 
 Reconciliation rules:
   1. Vigilance threshold = 1.0 (all 5 vigilance trials must rank the
-     `_corrupt` slot at position 6 / last). Failures get the long
-     REJECT_LINE matching APAP's wording.
+     `target_slot` -- the slot holding the real `spotex` mesh among
+     `N_CORRUPTS` broken meshes -- at position 1 / FIRST). Failures get
+     the long REJECT_LINE matching APAP's wording.
   2. (Optional, --worker_cap N >= 1) Per-worker cap: among
      vigilance-passing submissions, keep only the first N per workerId
      (sorted by SubmitTime, AssignmentId tiebreaker). Excess submissions
@@ -213,10 +214,10 @@ def main() -> None:
                 if t["kind"] != "vigilance":
                     continue
                 n_vig += 1
-                cs = t.get("corrupt_slot")
-                if cs is None or parsed is None:
+                ts = t.get("target_slot")
+                if ts is None or parsed is None:
                     continue
-                if parsed[N_SLOTS - 1] == cs:
+                if parsed[0] == ts:
                     correct += 1
             if n_vig != N_VIGILANCE:
                 n_skipped += 1
@@ -322,7 +323,7 @@ def main() -> None:
         f"  -> rejected by cap : {n_rejected_cap}  (--worker_cap={args.worker_cap})",
         f"rejected (vig<1.0)   : {n_rejected_vig}",
         f"main rankings emit   : {n_main_rankings}",
-        f"vigilance rankings   : {n_vig_rankings}  (kind='vigilance', _corrupt included)",
+        f"vigilance rankings   : {n_vig_rankings}  (kind='vigilance'; spotex + N_CORRUPTS bait, not used by fit_pl.py)",
         f"vigilance histogram  : {dict(sorted(vig_score_dist.items()))}",
         f"-> rankings   -> {rankings_path}",
         f"-> approvals  -> {approvals_path}",

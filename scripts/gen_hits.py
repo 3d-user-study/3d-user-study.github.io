@@ -10,18 +10,20 @@ Outputs (driven by `--seed`, default 2024):
                                               {i, prompt, slots[6]}
                                             slots[k] = {slot: 'A'..'F', dir: str}
                                             NO method names. NO `kind`.
-                                            NO `corrupt_slot`.
+                                            NO `target_slot`.
 
   texture-study/scripts/aliasmap_full.json  OFFLINE (.gitignored)
                                             Method-aware data for reconciler.
                                             Adds {sample, kind, slots[k].method,
-                                            corrupt_slot?} per trial.
+                                            target_slot?} per trial.
 
 Both files emit from one in-memory state; consistency assertions block on any
 mismatch. Each main trial = full rank of all 6 real methods for 1 sample.
-Each vigilance trial = 5 random real methods + 1 corrupt-texture mesh; the
-worker must rank the corrupt slot LAST. Public schema makes vigilance and
-main indistinguishable to the client.
+Each vigilance trial = N_CORRUPTS broken-texture meshes (`_corrupt_0`..
+`_corrupt_{N-1}`, all sharing the donor's OBJ topology so they render as the
+prompted object but with obviously-broken random-noise textures) plus 1
+real `spotex` mesh. The worker must rank the spotex slot FIRST. Public
+schema makes vigilance and main indistinguishable to the client.
 
 H_TUTORIAL is reserved; launch_hits.py filters it via RESERVED_HITIDS.
 """
@@ -36,9 +38,13 @@ from pathlib import Path
 from typing import Any
 
 METHODS: list[str] = ["spotex", "goatex", "mvadapter", "TEXGen", "paint3d", "syncmvd"]
-CORRUPT_METHOD: str = "_corrupt"
+TARGET_METHOD: str = "spotex"
+N_CORRUPTS: int = 5
+CORRUPT_METHODS: list[str] = [f"_corrupt_{k}" for k in range(N_CORRUPTS)]
 SLOTS: list[str] = ["A", "B", "C", "D", "E", "F"]
 TUTORIAL_HITID: str = "H_TUTORIAL"
+assert TARGET_METHOD in METHODS
+assert len(CORRUPT_METHODS) + 1 == len(SLOTS)
 
 
 def _dir_for(sample: str, method: str, hash_map: dict[str, dict[str, str]]) -> str:
@@ -91,27 +97,26 @@ def _build_vig_trial(
     prompt: dict[str, Any],
     hash_map: dict[str, dict[str, str]],
 ) -> dict[str, Any]:
-    real_methods = rng.sample(METHODS, 5)
-    entries = real_methods + [CORRUPT_METHOD]
+    entries = list(CORRUPT_METHODS) + [TARGET_METHOD]
     rng.shuffle(entries)
     slots_full: list[dict[str, str]] = []
-    corrupt_slot: str | None = None
+    target_slot: str | None = None
     for slot, method in zip(SLOTS, entries):
         slots_full.append({
             "slot": slot,
             "method": method,
             "dir": _dir_for(sample, method, hash_map),
         })
-        if method == CORRUPT_METHOD:
-            corrupt_slot = slot
-    if corrupt_slot is None:
-        raise AssertionError("vigilance trial must have a corrupt slot")
+        if method == TARGET_METHOD:
+            target_slot = slot
+    if target_slot is None:
+        raise AssertionError("vigilance trial must have a target slot")
     return {
         "kind": "vigilance",
         "sample": sample,
         "prompt": prompt,
         "slots": slots_full,
-        "corrupt_slot": corrupt_slot,
+        "target_slot": target_slot,
     }
 
 
@@ -185,7 +190,7 @@ def main() -> None:
     if missing_samples:
         raise SystemExit(f"method_hash_map missing {len(missing_samples)} samples: {missing_samples[:3]}")
     for s in samples:
-        for m in METHODS + [CORRUPT_METHOD]:
+        for m in METHODS + CORRUPT_METHODS:
             if m not in hash_map[s]:
                 raise SystemExit(f"method_hash_map[{s}] missing entry '{m}'")
 
@@ -249,7 +254,7 @@ def main() -> None:
             f"{hid} has {len(trial_map[hid])} trials, expected {expected_trial_count}"
         )
 
-    forbidden_keys = {"sample", "method", "kind", "corrupt_slot"}
+    forbidden_keys = {"sample", "method", "kind", "corrupt_slot", "target_slot"}
     for hid, trials in trial_map.items():
         for t in trials:
             for fk in forbidden_keys:
@@ -268,8 +273,12 @@ def main() -> None:
         assert m not in raw_trial_text, (
             f"INVARIANT #2 VIOLATED: method '{m}' appears in {args.out_trial_json}"
         )
-    assert CORRUPT_METHOD not in raw_trial_text, (
-        f"INVARIANT #2 VIOLATED: '{CORRUPT_METHOD}' appears in {args.out_trial_json}"
+    for cm in CORRUPT_METHODS:
+        assert cm not in raw_trial_text, (
+            f"INVARIANT #2 VIOLATED: '{cm}' appears in {args.out_trial_json}"
+        )
+    assert "_corrupt" not in raw_trial_text, (
+        f"INVARIANT #2 VIOLATED: '_corrupt' substring appears in {args.out_trial_json}"
     )
 
     for hid, blob in full_check.items():
@@ -286,15 +295,20 @@ def main() -> None:
                 assert sorted(methods_in_trial) == sorted(METHODS), (
                     f"main trial {hid}.i={t['i']} must contain all 6 methods, got {methods_in_trial}"
                 )
+                assert "target_slot" not in t, "main trial must not have target_slot"
                 assert "corrupt_slot" not in t, "main trial must not have corrupt_slot"
             else:
-                assert methods_in_trial.count(CORRUPT_METHOD) == 1, (
-                    f"vigilance {hid}.i={t['i']} must have exactly 1 corrupt slot"
+                assert methods_in_trial.count(TARGET_METHOD) == 1, (
+                    f"vigilance {hid}.i={t['i']} must have exactly 1 target ({TARGET_METHOD}) slot"
                 )
-                cs = t["corrupt_slot"]
-                cs_method = next(s["method"] for s in t["slots"] if s["slot"] == cs)
-                assert cs_method == CORRUPT_METHOD, (
-                    f"corrupt_slot {cs} in {hid}.i={t['i']} does not point at {CORRUPT_METHOD}"
+                assert sorted(m for m in methods_in_trial if m != TARGET_METHOD) == sorted(CORRUPT_METHODS), (
+                    f"vigilance {hid}.i={t['i']} non-target slots must be all {N_CORRUPTS} CORRUPT_METHODS, "
+                    f"got {sorted(m for m in methods_in_trial if m != TARGET_METHOD)}"
+                )
+                ts = t["target_slot"]
+                ts_method = next(s["method"] for s in t["slots"] if s["slot"] == ts)
+                assert ts_method == TARGET_METHOD, (
+                    f"target_slot {ts} in {hid}.i={t['i']} does not point at {TARGET_METHOD}"
                 )
 
     for hid in all_hits:

@@ -24,14 +24,20 @@ Usage (run from repo root):
 
 Outputs:
   texture-study/docs/data/{sample}/{hash16}/textured.{obj,mtl,png}
-  texture-study/docs/data/{sample}/{corrupt_hash16}/textured.{obj,mtl,png}
+  texture-study/docs/data/{sample}/{corrupt_K_hash16}/textured.{obj,mtl,png}
+        for K in 0..N_CORRUPTS-1
+        # public part face map
+        # vigilance bait: N_CORRUPTS broken variants per sample.
+        # All share the donor's OBJ/MTL topology so they render as the
+        # prompted object, but each has a different random-noise PNG
+        # (seeded by sample + K) so workers see N_CORRUPTS visually
+        # distinct broken textures alongside the 1 real (spotex) mesh.
+        # Vigilance task: rank the spotex mesh FIRST (it is the only
+        # non-broken texture among 6 slots).
   texture-study/docs/data/{sample}/class_faces_gt.json
-                                                # public part face map
-                                                # vigilance bait: shared OBJ
-                                                # topology + random-noise PNG
-                                                # so the prompted object renders
-                                                # with an obviously-broken texture
-  texture-study/scripts/method_hash_map.json   # PRIVATE: {sample: {method-or-_corrupt: hash}}
+  texture-study/scripts/method_hash_map.json
+        # PRIVATE: {sample: {method-or-_corrupt_K: hash}}
+        # Contains both the 6 real methods and the N_CORRUPTS bait variants.
   texture-study/scripts/.dehydrate_salt        # PRIVATE: 256-bit hex secret
 """
 
@@ -55,15 +61,20 @@ DEFAULT_MAP = Path("texture-study/scripts/method_hash_map.json")
 HASH_LEN = 16  # 64 bits truncated sha256; collision prob ~5e-15 for 378 cells
 PART_FACE_MAP = "class_faces_gt.json"
 
-# Sentinel hashed identically to real methods (same salt guards corrupt dir
-# name) but flagged separately so gen_hits.py picks it only for vigilance.
-CORRUPT_METHOD = "_corrupt"
+# Sentinels hashed identically to real methods (same salt guards corrupt dir
+# names) but flagged separately so gen_hits.py picks them only for vigilance.
+# N_CORRUPTS is the vigilance variant count: one vigilance trial holds 5
+# corrupts + 1 spotex, so N_CORRUPTS must equal 5.
+N_CORRUPTS = 5
+CORRUPT_METHODS: list[str] = [f"_corrupt_{k}" for k in range(N_CORRUPTS)]
 
 # Donor must share OBJ topology with the prompted object. spotex is one of the
 # 5 shared-topology methods; mvadapter has its own UV layout and is unsuitable.
+# spotex is ALSO the vigilance target (worker must rank it FIRST), so its real
+# textured render is what shines against the N_CORRUPTS noise variants.
 CORRUPT_OBJ_DONOR = "spotex"
 CORRUPT_PNG_SIZE = 512
-CORRUPT_PNG_SEED_BASE = 0xC0FFEE  # XOR with sample-name hash -> per-sample seed
+CORRUPT_PNG_SEED_BASE = 0xC0FFEE  # XOR with sample-name hash AND K -> per-sample/per-variant seed
 
 
 def load_or_create_salt(path: Path) -> str:
@@ -85,9 +96,9 @@ def method_hash(sample: str, method: str, salt: str) -> str:
     return h[:HASH_LEN]
 
 
-def _make_corrupt_png(sample: str, dest_path: Path) -> None:
+def _make_corrupt_png(sample: str, variant_k: int, dest_path: Path) -> None:
     sample_hash = int(hashlib.sha256(sample.encode("utf-8")).hexdigest()[:8], 16)
-    seed = (CORRUPT_PNG_SEED_BASE ^ sample_hash) & 0xFFFFFFFF
+    seed = (CORRUPT_PNG_SEED_BASE ^ sample_hash ^ variant_k) & 0xFFFFFFFF
     rng = np.random.default_rng(seed)
     arr = rng.integers(0, 256, size=(CORRUPT_PNG_SIZE, CORRUPT_PNG_SIZE, 3), dtype=np.uint8)
     Image.fromarray(arr, mode="RGB").save(dest_path, format="PNG", optimize=True)
@@ -95,6 +106,7 @@ def _make_corrupt_png(sample: str, dest_path: Path) -> None:
 
 def _build_corrupt_dir(
     sample: str,
+    variant_k: int,
     sample_dir: Path,
     dest_dir: Path,
 ) -> int:
@@ -117,7 +129,7 @@ def _build_corrupt_dir(
 
     png_path = dest_dir / "textured.png"
     if not png_path.exists():
-        _make_corrupt_png(sample, png_path)
+        _make_corrupt_png(sample, variant_k, png_path)
         n_written += 1
     return n_written
 
@@ -185,17 +197,18 @@ def main() -> None:
                     shutil.move(str(src_file), str(dst_file))
                 n_files_copied += 1
 
-        corrupt_h = method_hash(sample, CORRUPT_METHOD, salt)
-        corrupt_key = (sample, corrupt_h)
-        if corrupt_key in seen_hashes:
-            sys.exit(f"FATAL: hash collision at {sample}/{CORRUPT_METHOD} -> {corrupt_h}")
-        seen_hashes.add(corrupt_key)
-        method_hash_map[sample][CORRUPT_METHOD] = corrupt_h
+        for variant_k, corrupt_method in enumerate(CORRUPT_METHODS):
+            corrupt_h = method_hash(sample, corrupt_method, salt)
+            corrupt_key = (sample, corrupt_h)
+            if corrupt_key in seen_hashes:
+                sys.exit(f"FATAL: hash collision at {sample}/{corrupt_method} -> {corrupt_h}")
+            seen_hashes.add(corrupt_key)
+            method_hash_map[sample][corrupt_method] = corrupt_h
 
-        corrupt_dest = args.dest / sample / corrupt_h
-        n_dirs_planned += 1
-        if not args.dry_run:
-            n_files_copied += _build_corrupt_dir(sample, sample_dir, corrupt_dest)
+            corrupt_dest = args.dest / sample / corrupt_h
+            n_dirs_planned += 1
+            if not args.dry_run:
+                n_files_copied += _build_corrupt_dir(sample, variant_k, sample_dir, corrupt_dest)
 
         src_part_map = sample_dir / PART_FACE_MAP
         if not src_part_map.is_file():
