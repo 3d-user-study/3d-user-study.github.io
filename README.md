@@ -390,38 +390,157 @@ python3 texture-study/scripts/launch_hits.py \
 ### Phase 6 — monitor
 
 - Day 1-2: check assignment completion in <https://requester.mturk.com/>.
+- For a live progress snapshot of one HIT (capacity, accepted/pending/submitted counts, submit rate, ETA, balance, recent assignment timings):
+
+  ```bash
+  HITID=<MTURK_HIT_ID> bash texture-study/scripts/status.sh
+  ```
+
+  No arguments uses the default `HITID` baked into the script (currently set to the first-batch HIT). Pass `HITID=` per invocation to point it at any HIT. Output: HIT metadata + per-status counts + 20 most recent submissions with WorkerId / accept-submit duration + current MTurk balance.
 - Watch for vigilance-fail clusters; reject vigilance score < 1.0 (i.e. any of the 5 vigilance trials with the corrupt slot NOT placed at rank 6 / last).
+
+### Phase 6.5 — second batch with exclusion qualification (optional)
+
+If the first batch produces too few valid (5/5 vigilance) workers to support paired CIs and you want to add ~N more responses without double-counting workers, launch a second batch that excludes everyone who already participated in batch 1:
+
+```bash
+HITID_BATCH1=<batch-1 MTurk HITId>
+
+# 1. Create a single-use qualification that batch-1 workers will hold.
+QUAL_ID=$(aws --profile mturk mturk create-qualification-type \
+    --region us-east-1 \
+    --name "H_0001_Batch1_Participant_$(date +%Y%m%d)" \
+    --description "Worker has already participated in batch 1 of this study." \
+    --qualification-type-status Active \
+    --query 'QualificationType.QualificationTypeId' --output text)
+echo "$QUAL_ID"
+
+# 2. Assign that qualification to every batch-1 worker.
+#    (Use list-assignments-for-hit to collect WorkerIds.)
+for W in $(aws --profile mturk mturk list-assignments-for-hit \
+              --hit-id "$HITID_BATCH1" --region us-east-1 \
+              --query 'Assignments[].WorkerId' --output text); do
+  aws --profile mturk mturk associate-qualification-with-worker \
+      --region us-east-1 --qualification-type-id "$QUAL_ID" \
+      --worker-id "$W" --integer-value 1 --no-send-notification
+done
+
+# 3. Create a fresh HITType cloned from batch 1 but ALSO requiring the
+#    new exclusion qualification to NOT exist on the worker. The base
+#    qualifications (≥10 HITs approved, ≥90% approval, locale) stay
+#    unchanged. `scripts/create_hit_type.py` does not yet accept extra
+#    qualifications, so call create-hit-type via the AWS CLI directly:
+aws --profile mturk mturk create-hit-type --region us-east-1 \
+    --title       "Rank 3D mesh textures (~10 min, 25 trials)" \
+    --description "For each trial, drag and rank six 3D textured meshes (A–F) from best to worst by how well their texture matches a written prompt." \
+    --reward      "2.50" \
+    --assignment-duration-in-seconds 3600 \
+    --auto-approval-delay-in-seconds 259200 \
+    --keywords    "3d, mesh, texture, comparison, ranking, drag-and-drop" \
+    --qualification-requirements \
+        '[{"QualificationTypeId":"00000000000000000040","Comparator":"GreaterThanOrEqualTo","IntegerValues":[10]},
+          {"QualificationTypeId":"000000000000000000L0","Comparator":"GreaterThanOrEqualTo","IntegerValues":[90]},
+          {"QualificationTypeId":"00000000000000000071","Comparator":"In","LocaleValues":[{"Country":"US"},{"Country":"CA"},{"Country":"GB"},{"Country":"AU"},{"Country":"NZ"},{"Country":"IE"}]},
+          {"QualificationTypeId":"'$QUAL_ID'","Comparator":"DoesNotExist"}]'
+# -> capture HITTypeId from the response and export it
+
+# 4. Launch the batch-2 HIT. Reuse the same Question XML (same
+#    trialMap.json + same H_0001), set MaxAssignments to the desired
+#    batch size, and add a distinct RequesterAnnotation so the result
+#    rows are easy to filter later (e.g. `H_0001_batch2`). If you take
+#    the AWS-CLI path directly instead of launch_hits.py, remember to
+#    append the batch-2 row to `scripts/launch_log.csv` with logical
+#    `hitId=H_0001` (NOT the batch-2 RequesterAnnotation) so that
+#    aliasmap_full.json lookup in reconcile.py keeps working.
+```
+
+When the batch-2 HIT closes, follow Phase 7 below — once per batch into its own `analysis/batch{1,2}_<HITID>/` subdir, then concatenate the two `rankings.csv` files into `analysis/combined/rankings.csv` and re-run `fit_pl.py` + `pl_summary.py` against the combined CSV.
 
 ### Phase 7 — analysis
 
-After the HIT lifetime expires (or all 36 HITs are submitted), download the results CSV from the Requester console (`Batch_xxxx_batch_results.csv`).
+After the HIT lifetime expires (or all HITs are submitted), get the per-assignment results into a `reconcile.py`-shaped CSV via either path A or B, then run reconcile + PL.
+
+**Output bucket convention (multi-batch).** All outputs land under `analysis/<bucket>/`:
+
+- `analysis/batch1_<HITID>/` — first batch (one subdir per launched HIT, named with the MTurk HITId for traceability)
+- `analysis/batch2_<HITID>/` — additional batches as needed
+- `analysis/combined/` — concatenated `rankings.csv` from all batches plus PL fit on the union (this is the dataset used for the paper headline numbers)
+- `analysis/legacy_synth/` — synthetic-data validation artifacts (pre-real-data, kept for reproducibility of the PL recovery test)
+
+Pass the target bucket to `reconcile.py` via `--out_dir`. `fit_pl.py` and `pl_summary.py` take explicit input/output paths so the same scripts work for any bucket.
 
 ```bash
-# 1. Reconcile MTurk results -> per-trial rankings table
+# (Path A) Download the results CSV from the Requester console
+#   ("Manage" -> Batch -> "Download CSV") and skip to step 1.
+#
+# (Path B) Build the same-shape CSV directly from AWS without the UI:
+#
+#   1. Dump raw assignment JSON for one HIT:
+aws --profile mturk mturk list-assignments-for-hit \
+    --hit-id <MTURK_HIT_ID> --region us-east-1 \
+    --max-results 100 --output json \
+    > data/raw_assignments.json
+#
+#   2. Reshape to the batch-results CSV shape reconcile.py expects:
+python3 texture-study/scripts/build_results_csv.py \
+    --in_json    data/raw_assignments.json \
+    --launch_log texture-study/scripts/launch_log.csv \
+    --out_csv    data/mturk_results.csv
+# -> Resolves mturkHitId -> logical hitId (H_NNNN) via launch_log.csv
+#    so reconcile.py's aliasmap lookup keeps working. If a row's
+#    mturkHitId is not in launch_log.csv, build_results_csv.py emits
+#    the row with an empty RequesterAnnotation and reconcile.py will
+#    skip it as `unknown_hitid`; append the missing row to
+#    launch_log.csv and rerun.
+
+# 1. Reconcile MTurk results -> per-trial rankings + approvals/rejections.
 #    Add `--worker_cap 1` for production to enforce 1 approval per workerId
 #    (default `--worker_cap=0` is fine for sandbox pilot).
+BUCKET=texture-study/analysis/batch1_<MTURK_HIT_ID>
 python3 texture-study/scripts/reconcile.py \
-    --results_csv path/to/Batch_xxxx_batch_results.csv
-# -> writes texture-study/analysis/rankings.csv
-#    + texture-study/analysis/approvals.csv
-#    + texture-study/analysis/rejections.csv
-#    + texture-study/analysis/reconcile_summary.txt
+    --results_csv data/mturk_results.csv \
+    --full_json   texture-study/scripts/aliasmap_full.json \
+    --out_dir     "$BUCKET"
+# -> $BUCKET/rankings.csv + approvals.csv + rejections.csv + reconcile_summary.txt
 
 # 2. Per-sample Plackett-Luce MLE + bootstrap CIs
-python3 texture-study/scripts/fit_pl.py
-# -> texture-study/analysis/pl_per_sample.csv
+python3 texture-study/scripts/fit_pl.py \
+    --rankings "$BUCKET/rankings.csv" \
+    --out_csv  "$BUCKET/pl_per_sample.csv"
 
-# (Optional) Add `--include_vigilance` to fit_pl.py to also use vigilance trials
-# as 5-method partial rankings (the corrupt slot is stripped). Default is
-# main trials only; the vigilance pass criterion already proves the corrupt
-# slot was placed last so the remaining 5 methods form a clean ranking.
+# 3. Method-level summary: per-sample stats + pooled PL fit + bootstrap CIs.
+#    Output columns: method, mean_score, mean_rank, n_wins, n_last,
+#                    pooled_score, pooled_low_ci, pooled_high_ci, pooled_rank.
+#    pooled_* come from a single PL fit over ALL `main` rankings in the bucket
+#    (NOT a mean of per-sample scores); this is the headline number used in
+#    the paper. seed=2024 makes the bootstrap deterministic.
+python3 texture-study/scripts/pl_summary.py \
+    --rankings      "$BUCKET/rankings.csv" \
+    --pl_per_sample "$BUCKET/pl_per_sample.csv" \
+    --out_csv       "$BUCKET/pl_method_summary.csv"
 
-# 3. Aggregate ranking via paired bootstrap over samples
-python3 texture-study/scripts/aggregate.py
-# -> texture-study/analysis/pl_aggregate.csv
+# 4. (Optional) Mean-of-samples paired-bootstrap aggregate
+python3 texture-study/scripts/aggregate.py \
+    --pl_per_sample "$BUCKET/pl_per_sample.csv" \
+    --out_csv       "$BUCKET/pl_aggregate.csv"
+
+# 5. (Multi-batch) Combined fit: concatenate the per-batch rankings,
+#    then re-run fit_pl.py + pl_summary.py against the union. The
+#    headline numbers in the paper come from this combined fit.
+mkdir -p texture-study/analysis/combined
+head -1 texture-study/analysis/batch1_<HIT1>/rankings.csv > texture-study/analysis/combined/rankings.csv
+tail -n +2 texture-study/analysis/batch1_<HIT1>/rankings.csv >> texture-study/analysis/combined/rankings.csv
+tail -n +2 texture-study/analysis/batch2_<HIT2>/rankings.csv >> texture-study/analysis/combined/rankings.csv
+python3 texture-study/scripts/fit_pl.py \
+    --rankings texture-study/analysis/combined/rankings.csv \
+    --out_csv  texture-study/analysis/combined/pl_per_sample.csv
+python3 texture-study/scripts/pl_summary.py \
+    --rankings      texture-study/analysis/combined/rankings.csv \
+    --pl_per_sample texture-study/analysis/combined/pl_per_sample.csv \
+    --out_csv       texture-study/analysis/combined/pl_method_summary.csv
 ```
 
-End-to-end synthetic-data validation (already run): with ground-truth Plackett-Luce log-strengths `[1.0, 0.6, 0.2, -0.2, -0.6, -1.0]` for `[spotex, goatex, mvadapter, TEXGen, paint3d, syncmvd]` and 14 rankings per sample × 54 samples, the aggregate ranking exactly matched truth (Spearman ρ = 1.0, all CI bounds sane).
+End-to-end synthetic-data validation (already run, artifacts under `analysis/legacy_synth/`): with ground-truth Plackett-Luce log-strengths `[1.0, 0.6, 0.2, -0.2, -0.6, -1.0]` for `[spotex, goatex, mvadapter, TEXGen, paint3d, syncmvd]` and 14 rankings per sample × 54 samples, the aggregate ranking exactly matched truth (Spearman ρ = 1.0, all CI bounds sane).
 
 ---
 
@@ -441,6 +560,18 @@ texture-study/
 │   │   └── {sample}/{hash16}/textured.{obj,mtl,png}
 │   └── CNAME                       # (optional) custom domain hostname
 │
+├── data/                           # raw MTurk dumps (input to build_results_csv.py)
+│   ├── raw_assignments.json        # `aws mturk list-assignments-for-hit ...` dump (batch 1)
+│   ├── raw_assignments_batch2.json # batch 2 dump (if you ran a second batch)
+│   ├── mturk_results.csv           # reconcile.py-shaped CSV (output of build_results_csv.py)
+│   └── mturk_results_batch2.csv    # same shape, batch 2
+│
+├── analysis/                       # all PL-pipeline outputs (gitignored by default; force-add to publish results)
+│   ├── batch1_<HITID>/             # reconcile + fit_pl + pl_summary outputs for batch 1
+│   ├── batch2_<HITID>/             # …for batch 2 (only if a second batch was launched)
+│   ├── combined/                   # concatenated rankings.csv + re-fit (paper headline numbers)
+│   └── legacy_synth/               # synthetic-data PL-recovery validation artifacts
+│
 └── scripts/                        # offline-only — NOT under /docs, never published
     ├── requirements.txt
     ├── dehydrate_meshes.py         # one-time mesh hashing pass (real + corrupt variants)
@@ -450,10 +581,13 @@ texture-study/
     ├── aliasmap_full.json          # OFFLINE expanded HIT/trial map with corrupt_slot (gitignored)
     ├── create_hit_type.py          # MTurk HITType creator (--reward REQUIRED)
     ├── launch_hits.py              # MTurk HIT launcher (boto3)
-    ├── launch_log.csv              # written by launch_hits.py (gitignored)
-    ├── reconcile.py                # Batch_results.csv -> rankings.csv (vigilance: corrupt last)
+    ├── launch_log.csv              # written by launch_hits.py; mturkHitId -> H_NNNN map (gitignored)
+    ├── status.sh                   # live HIT progress monitor (HITID=... bash ...)
+    ├── build_results_csv.py        # raw_assignments.json -> reconcile.py-shaped CSV (offline alternative to UI download)
+    ├── reconcile.py                # results CSV -> rankings.csv (vigilance: corrupt last) + approvals/rejections
     ├── fit_pl.py                   # per-sample Plackett-Luce MLE + bootstrap CIs
-    ├── aggregate.py                # paired-bootstrap aggregate ranking
+    ├── pl_summary.py               # method-level summary: per-sample stats + pooled PL fit + bootstrap CIs
+    ├── aggregate.py                # paired-bootstrap mean-of-samples aggregate ranking
     └── verify_deploy.sh            # live deploy structural-invariant probe
 ```
 
