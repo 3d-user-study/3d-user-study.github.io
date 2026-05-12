@@ -177,6 +177,14 @@ def main() -> None:
     )
     parser.add_argument("--out_trial_json", type=Path, default=Path("texture-study/docs/trialMap.json"))
     parser.add_argument("--out_full_json", type=Path, default=Path("texture-study/scripts/aliasmap_full.json"))
+    parser.add_argument(
+        "--h0001_selected_file",
+        type=Path,
+        default=None,
+        help="Optional file (one sample-id per line) used VERBATIM for H_0001 main trials. "
+             "If shorter than --n_main, fills with random-unique samples from the remaining pool "
+             "(rng seeded by --seed). Duplicates in the file are preserved.",
+    )
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -184,6 +192,41 @@ def main() -> None:
     samples: list[str] = json.loads(args.viewer_index.read_text())["samples"]
     if not samples:
         raise SystemExit("viewer_index.json has no samples")
+
+    h0001_main_pool: list[str] | None = None
+    if args.h0001_selected_file is not None:
+        raw_lines = args.h0001_selected_file.read_text().splitlines()
+        selected_lines: list[str] = []
+        for raw in raw_lines:
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            selected_lines.append(line)
+        invalid = [s for s in selected_lines if s not in set(samples)]
+        if invalid:
+            raise SystemExit(
+                f"--h0001_selected_file has unknown samples (not in viewer_index): {invalid}"
+            )
+        if len(selected_lines) > args.n_main:
+            raise SystemExit(
+                f"--h0001_selected_file has {len(selected_lines)} lines, "
+                f"expected <= --n_main ({args.n_main})"
+            )
+        used_unique = set(selected_lines)
+        remaining_pool = [s for s in samples if s not in used_unique]
+        rng_h = random.Random(args.seed + 7)
+        rng_h.shuffle(remaining_pool)
+        need = args.n_main - len(selected_lines)
+        if need > len(remaining_pool):
+            raise SystemExit(
+                f"not enough remaining samples ({len(remaining_pool)}) for needed additions ({need})"
+            )
+        h0001_main_pool = selected_lines + remaining_pool[:need]
+        print(
+            f"H_0001 custom pool: {len(h0001_main_pool)} entries "
+            f"({len(set(h0001_main_pool))} unique); "
+            f"from file: {len(selected_lines)}; random additions: {need}"
+        )
 
     hash_map: dict[str, dict[str, str]] = json.loads(args.method_hash_map.read_text())
     missing_samples = [s for s in samples if s not in hash_map]
@@ -202,7 +245,12 @@ def main() -> None:
     for i in range(args.n_hits):
         hid = f"H_{i + 1:04d}"
 
-        chosen = _greedy_pick_samples(rng, cov, samples, args.n_main)
+        if hid == "H_0001" and h0001_main_pool is not None:
+            chosen = list(h0001_main_pool)
+            vig_source: list[str] = list(h0001_main_pool)
+        else:
+            chosen = _greedy_pick_samples(rng, cov, samples, args.n_main)
+            vig_source = samples
         for s in chosen:
             cov[s] += 1
 
@@ -210,7 +258,7 @@ def main() -> None:
             _build_main_trial(rng, s, prompts[s], hash_map) for s in chosen
         ]
         vig_trials: list[dict[str, Any]] = [
-            _build_vig_trial(rng, rng.choice(samples), prompts[rng.choice(samples)], hash_map)
+            _build_vig_trial(rng, rng.choice(vig_source), prompts[rng.choice(vig_source)], hash_map)
             for _ in range(args.n_vigilance)
         ]
         for v in vig_trials:
